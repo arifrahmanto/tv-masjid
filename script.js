@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const HIGHLIGHT_TEXT_P_CLASS = 'text-black';   // Warna teks waktu highlight
 
     const prayerItemOriginalClasses = {};
+    let hijriDateString = ''; // Variabel untuk menyimpan tanggal Hijriah
 
     // Simpan kelas warna asli saat halaman dimuat
     PRAYER_ORDER.forEach(key => {
@@ -42,7 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
 
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        currentDateElement.textContent = now.toLocaleDateString('id-ID', options);
+        let gregorianDateText = now.toLocaleDateString('id-ID', options);
+        if (hijriDateString) {
+            currentDateElement.textContent = `${gregorianDateText} / ${hijriDateString}`;
+        } else {
+            currentDateElement.textContent = gregorianDateText;
+        }
     }
 
     // Fungsi untuk mengambil dan menampilkan jadwal sholat
@@ -93,6 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 prayerTimeElements.ashar.textContent = timings.Asr ? timings.Asr.split(' ')[0] : 'N/A';
                 prayerTimeElements.maghrib.textContent = timings.Maghrib ? timings.Maghrib.split(' ')[0] : 'N/A';
                 prayerTimeElements.isya.textContent = timings.Isha ? timings.Isha.split(' ')[0] : 'N/A';
+
+                // Ambil dan format tanggal Hijriah
+                const hijri = dailyScheduleData.date.hijri;
+                if (hijri && hijri.day && hijri.month && hijri.month.en && hijri.year) {
+                    hijriDateString = `${hijri.day} ${hijri.month.en} ${hijri.year} H`;
+                } else {
+                    hijriDateString = ''; // Reset jika data Hijriah tidak lengkap
+                }
             } else {
                 console.error("Struktur respons API tidak diharapkan atau data untuk hari yang salah:", dailyScheduleData);
                 Object.values(prayerTimeElements).forEach(el => el.textContent = 'Error');
