@@ -1,0 +1,19 @@
+/* style.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Anda bisa menambahkan custom style di sini jika diperlukan,
+   namun usahakan memaksimalkan penggunaan kelas Tailwind di HTML. */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.prayer-time-item {
+    transition: transform 0.2s ease-in-out;
+}
+
+.prayer-time-item:hover {
+    transform: translateY(-5px);
+}
