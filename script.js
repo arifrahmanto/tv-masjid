@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const prayerItemOriginalClasses = {};
     let hijriDateString = ''; // Variabel untuk menyimpan tanggal Hijriah
 
+    const mainContentElement = document.querySelector('main');
+    const contentUrls = ['welcome.html', 'keuangan.html', 'takmir.html', 'kegiatan.html', 'pengumuman.html'];
+    let currentContentIndex = 0;
+
     // Simpan kelas warna asli saat halaman dimuat
     PRAYER_ORDER.forEach(key => {
         const pElement = prayerTimeElements[key]; // Ini adalah elemen <p> untuk waktu
@@ -185,15 +189,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadContentIntoMain(url) {
+        if (!mainContentElement) return;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Gagal memuat konten: ${response.status} ${response.statusText}`);
+            }
+            const htmlContent = await response.text();
+            mainContentElement.innerHTML = htmlContent;
+        } catch (error) {
+            console.error("Error memuat konten ke main:", error);
+            mainContentElement.innerHTML = `<p class="text-red-500 text-center">Gagal memuat konten.</p>`;
+        }
+    }
+
+    function cycleContent() {
+        loadContentIntoMain(contentUrls[currentContentIndex]);
+        currentContentIndex = (currentContentIndex + 1) % contentUrls.length;
+    }
+
     // Panggil fungsi saat halaman dimuat
     updateClock();
     fetchAndDisplayPrayerTimes();
+    cycleContent(); // Muat konten pertama kali
 
     // Perbarui jam setiap detik
     setInterval(updateClock, 1000);
 
     // Anda mungkin ingin memperbarui jadwal sholat setiap hari atau sesuai kebutuhan
     // Untuk memastikan jadwal selalu update setiap hari pada tengah malam:
-    // setInterval(fetchAndDisplayPrayerTimes, 24 * 60 * 60 * 1000); // Setiap 24 jam
+    setInterval(fetchAndDisplayPrayerTimes, 24 * 60 * 60 * 1000); // Setiap 24 jam
     setInterval(highlightNextPrayer, 30000); // Perbarui highlight setiap 30 detik
+    setInterval(cycleContent, 10000); // Ganti konten setiap 10 detik
 });
