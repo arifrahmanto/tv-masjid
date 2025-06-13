@@ -16,8 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const HIGHLIGHT_TEXT_H2_CLASS = 'text-black'; // Warna teks judul highlight
     const HIGHLIGHT_TEXT_P_CLASS = 'text-black';   // Warna teks waktu highlight
 
+    const TARHIM_OFFSET_MINUTES = 6; // Putar tarhim X menit sebelum waktu sholat
+    const TARHIM_AUDIO_FILE = 'tarhim.mp3'; // Nama file audio tarhim
+    const BEEP_AUDIO_FILE = 'beep.mp3'; // Nama file audio beep
+
     const prayerItemOriginalClasses = {};
     let hijriDateString = ''; // Variabel untuk menyimpan tanggal Hijriah
+    let tarhimPlayedFor = {}; // Objek untuk melacak status pemutaran tarhim
+    PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status
+    let tarhimAudio = null; // Objek untuk audio tarhim
 
     const mainContentElement = document.querySelector('main');
     const contentUrls = ['welcome.html', 'keuangan.html', 'takmir.html', 'kegiatan.html', 'pengumuman.html'];
@@ -61,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Untuk contoh ini, kita akan menggunakan data statis.
     // Dalam aplikasi nyata, Anda akan mengambil data ini dari API.
     async function fetchAndDisplayPrayerTimes() {
+        // Reset status pemutaran tarhim untuk hari/fetch baru
+        PRAYER_ORDER.forEach(key => {
+            tarhimPlayedFor[key] = false;
+        });
+
         const today = new Date();
         const year = today.getFullYear();
         const month = today.getMonth() + 1; // Bulan dimulai dari 0
@@ -184,6 +196,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function getTarhimAudio() {
+        if (!tarhimAudio) {
+            tarhimAudio = new Audio(TARHIM_AUDIO_FILE);
+            tarhimAudio.onerror = () => {
+                console.error(`Error loading tarhim audio: ${TARHIM_AUDIO_FILE}`);
+                tarhimAudio = null; // Izinkan percobaan ulang pada panggilan berikutnya jika pemuatan gagal
+            };
+        }
+        return tarhimAudio;
+    }
+
+    function checkAndPlayTarhim() {
+        const now = new Date();
+        const nowTime = now.getTime();
+
+        PRAYER_ORDER.forEach(key => {
+            if (tarhimPlayedFor[key]) { // Jika sudah diputar untuk sholat ini hari ini
+                return;
+            }
+
+            const pElement = prayerTimeElements[key];
+            if (!pElement || !pElement.textContent || pElement.textContent === 'N/A' || pElement.textContent === 'Error' || !pElement.textContent.includes(':')) {
+                return; // Lewati jika waktu tidak valid
+            }
+            const timeStr = pElement.textContent;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) return;
+
+            const prayerDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+            const prayerTimeMillis = prayerDateTime.getTime();
+
+            // Hitung waktu mulai tarhim (X menit sebelum waktu sholat)
+            const tarhimStartTimeMillis = prayerTimeMillis - (TARHIM_OFFSET_MINUTES * 60 * 1000);
+            // Batas akhir untuk memulai pemutaran tarhim (misalnya, dalam 1 menit dari waktu mulai tarhim yang dijadwalkan)
+            const tarhimPlayWindowEndMillis = tarhimStartTimeMillis + (60 * 1000); 
+
+            if (nowTime >= tarhimStartTimeMillis && nowTime < prayerTimeMillis && nowTime < tarhimPlayWindowEndMillis) {
+                const audio = getTarhimAudio();
+                if (audio) {
+                    console.log(`Playing tarhim for ${key} (scheduled at ${new Date(tarhimStartTimeMillis).toLocaleTimeString()})`);
+                    audio.play().then(() => {
+                        tarhimPlayedFor[key] = true; // Tandai tarhim sudah mulai diputar
+
+                        // Tambahkan event listener untuk 'ended'
+                        audio.onended = () => {
+                            console.log(`Tarhim for ${key} finished. Playing beep.`);
+                            const beepAudio = new Audio(BEEP_AUDIO_FILE);
+                            beepAudio.play().catch(e => {
+                                console.error(`Error playing beep.mp3 for ${key}:`, e);
+                            });
+                            audio.onended = null; // Hapus listener setelah selesai
+                        };
+                    }).catch(e => {
+                        console.error(`Error playing tarhim for ${key}:`, e);
+                        // Jika tarhim gagal diputar, kita mungkin tidak ingin menandainya sebagai sudah diputar
+                    });
+                }
+            }
+        });
+    }
+
     async function loadContentIntoMain(url) {
         if (!mainContentElement) return;
         try {
@@ -253,6 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Perbarui jam setiap detik
     setInterval(updateClock, 1000);
-    // Menjadwalkan secara spesifik untuk 00:00
     setInterval(highlightNextPrayer, 30000); // Perbarui highlight setiap 30 detik
+    setInterval(checkAndPlayTarhim, 1000); // Periksa dan putar tarhim setiap 1 detik
 });
