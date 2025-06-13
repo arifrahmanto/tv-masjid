@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mainContentElement = document.querySelector('main');
     const contentUrls = ['welcome.html', 'keuangan.html', 'takmir.html', 'kegiatan.html', 'pengumuman.html'];
+    // const contentUrls = ['video.html'];
     let currentContentIndex = 0;
+    let cycleContentIntervalId = null; // Untuk menyimpan ID interval cycleContent
 
     // Simpan kelas warna asli saat halaman dimuat
     PRAYER_ORDER.forEach(key => {
@@ -67,14 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const city = 'Demak'; 
         const country = 'ID';
         const tune = '3,3,3,3,3,3,3,3,3'; // Ini adalah contoh untuk Indonesia, bisa disesuaikan dengan kebutuhan
-        // Metode kalkulasi bisa disesuaikan. Method 2 adalah ISNA (Islamic Society of North America).
-        // Kemenag biasanya menggunakan method 99 atau method khusus, 
-        // namun Aladhan API mungkin tidak secara langsung mendukungnya dengan nomor spesifik.
-        // Anda bisa merujuk ke dokumentasi Aladhan untuk metode yang paling sesuai untuk Indonesia.
-        // Untuk Indonesia, seringkali method 3 (Muslim World League) atau 4 (Umm Al-Qura University, Makkah) juga digunakan.
-        // Atau method 20 untuk Kemenag jika tersedia di API yang Anda gunakan.
-        // Untuk Aladhan, method 5 (Egyptian General Authority of Survey) juga umum.
-        // Mari kita coba method 3 sebagai contoh umum.
+        // Metode kalkulasi bisa disesuaikan. Method 20 adalah Kemenag Indonesia.
         const method = 20; // Ganti dengan metode yang sesuai jika perlu
 
         try {
@@ -204,22 +199,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function cycleContent() {
-        loadContentIntoMain(contentUrls[currentContentIndex]);
+    async function cycleContent() {
+        if (contentUrls.length === 0) {
+            // console.log("Tidak ada URL konten untuk di-siklus.");
+            return;
+        }
+
+        const urlToLoad = contentUrls[currentContentIndex];
+        // console.log(`Memuat konten: ${urlToLoad}`);
+        await loadContentIntoMain(urlToLoad);
+
+        // Pindahkan ke indeks berikutnya untuk siklus potensial berikutnya
         currentContentIndex = (currentContentIndex + 1) % contentUrls.length;
+
+        if (urlToLoad === 'video.html') {
+            // Jika video YouTube ditampilkan, hentikan siklus
+            if (cycleContentIntervalId !== null) {
+                clearInterval(cycleContentIntervalId);
+                cycleContentIntervalId = null;
+                // console.log('Video YouTube ditampilkan, siklus konten dihentikan.');
+            }
+        } else {
+            // Jika konten bukan video YouTube, dan siklus dihentikan, dan ada lebih dari satu item, mulai lagi
+            if (cycleContentIntervalId === null && contentUrls.length > 1) {
+                // console.log('Melanjutkan siklus konten untuk konten non-video.');
+                cycleContentIntervalId = setInterval(cycleContent, 10000); // Ganti konten setiap 10 detik
+            } else if (cycleContentIntervalId === null && contentUrls.length <= 1) {
+                // Hanya satu item dan itu bukan kegiatan.html. Sudah dimuat. Tidak perlu interval.
+                // console.log('Konten tunggal non-video ditampilkan. Tidak perlu siklus.');
+            }
+        }
+    }
+
+    function scheduleNextMidnightFetch() {
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 500); // Pukul 00:00:00.500 hari berikutnya
+        const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+        setTimeout(async () => {
+            console.log("Fetching prayer times at midnight...");
+            await fetchAndDisplayPrayerTimes();
+            scheduleNextMidnightFetch(); // Jadwalkan lagi untuk tengah malam berikutnya
+        }, msUntilMidnight);
     }
 
     // Panggil fungsi saat halaman dimuat
     updateClock();
     fetchAndDisplayPrayerTimes();
-    cycleContent(); // Muat konten pertama kali
+    if (contentUrls.length > 0) {
+        cycleContent(); // Muat konten pertama kali, fungsi ini akan mengatur interval jika perlu
+    }
+    scheduleNextMidnightFetch(); // Jadwalkan fetch pertama pada tengah malam berikutnya
 
     // Perbarui jam setiap detik
     setInterval(updateClock, 1000);
-
-    // Anda mungkin ingin memperbarui jadwal sholat setiap hari atau sesuai kebutuhan
-    // Untuk memastikan jadwal selalu update setiap hari pada tengah malam:
-    setInterval(fetchAndDisplayPrayerTimes, 24 * 60 * 60 * 1000); // Setiap 24 jam
+    // Menjadwalkan secara spesifik untuk 00:00
     setInterval(highlightNextPrayer, 30000); // Perbarui highlight setiap 30 detik
-    setInterval(cycleContent, 10000); // Ganti konten setiap 10 detik
 });

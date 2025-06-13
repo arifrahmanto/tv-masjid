@@ -13,17 +13,21 @@
     <!-- Jadikan div ini sebagai flex container yang tumbuh dan menyusun anak-anaknya secara vertikal -->
     <div class="w-full shadow-2xl rounded-lg p-4 md:p-5 flex flex-col flex-grow">
         <!-- Jadikan header sebagai flex container untuk mengatur posisi anak-anaknya -->
-        <header class="bg-gray-700 p-4 flex justify-between items-start mb-4 md:mb-6">
-            <!-- Grup untuk title dan current-date di kiri -->
-            <div class="text-left">
-                <p id="title" class="text-xl md:text-2xl text-white font-bold">MASJID AT-TAQWA BANJARSARI, GAJAH, DEMAK</p>
-                <p id="current-date" class="text-lg md:text-xl text-gray-300 mt-1">Senin, 1 Januari 2024</p>
+        <header class="p-4 flex justify-between items-start mb-2 md:mb-2">
+            <!-- Grup untuk logo, title, dan current-date di kiri -->
+            <div class="flex items-center"> <!-- Container untuk logo dan blok teks -->
+                <img src="mosque.svg" alt="Logo Masjid" class="h-10 md:h-15 mr-3 md:mr-4"> <!-- Ganti 'logo.png' dengan path ke file logo Anda -->
+                <div class="text-left">
+                    <p id="title" class="text-xl md:text-2xl text-white font-bold">MASJID AT-TAQWA BANJARSARI</p>
+                    <p id="current-date" class="text-lg md:text-xl text-gray-300 mt-1">Senin, 1 Januari 2024</p>
+                </div>
             </div>
+
             <!-- current-time di kanan -->
-            <h1 id="current-time" class="text-3xl md:text-4xl font-bold">00:00:00</h1>
+            <h1 id="current-time" class="text-3xl md:text-4xl font-bold text-yellow-400">00:00:00</h1>
         </header>
         <!-- Biarkan area konten utama ini tumbuh untuk mendorong footer ke bawah -->
-        <main class="flex-grow flex flex-col justify-center items-center  text-2xl md:text-2xl m-8">            
+        <main class="flex-grow flex flex-col justify-center items-center bg-gray-900 border-1 border-gray-600 text-2xl md:text-2xl m-1 p-5">            
             
         </main>
         <!-- Running Text Section -->
@@ -34,28 +38,28 @@
         </div>
         <!-- Prayer Times Section -->
         <footer id="prayer-times" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-5 text-center mt-2 md:mt-2">
-            <div class="prayer-time-item bg-gray-700 rounded pt-0 pb-2 shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">IMSAK</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 rounded pt-0 pb-2 shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">IMSAK</h2>
                 <p id="imsak-time" class="text-2xl md:text-3xl font-serif font-bold">00:00</p>
             </div>
-            <div class="prayer-time-item bg-gray-700 pt-0 pb-2 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">SUBUH</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 pt-0 pb-2 rounded shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">SUBUH</h2>
                 <p id="subuh-time" class="text-2xl md:text-3xl font-serif font-bold mt-1">00:00</p>
             </div>
-            <div class="prayer-time-item bg-gray-700 pt-0 pb-2 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">DZUHUR</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 pt-0 pb-2 rounded shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">DZUHUR</h2>
                 <p id="dzuhur-time" class="text-2xl md:text-3xl font-serif font-bold mt-1">00:00</p>
             </div>
-            <div class="prayer-time-item bg-gray-700 pt-0 pb-2 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">ASHAR</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 pt-0 pb-2 rounded shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">ASHAR</h2>
                 <p id="ashar-time" class="text-2xl md:text-3xl font-serif font-bold mt-1">00:00</p>
             </div>
-            <div class="prayer-time-item bg-gray-700 pt-0 pb-2 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">MAGHRIB</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 pt-0 pb-2 rounded shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">MAGHRIB</h2>
                 <p id="maghrib-time" class="text-2xl md:text-3xl font-serif font-bold mt-1">00:00</p>
             </div>
-            <div class="prayer-time-item bg-gray-700 pt-0 pb-2 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">ISYA</h2>
+            <div class="prayer-time-item bg-gray-800 border-1 border-gray-600 pt-0 pb-2 rounded shadow-md">
+                <h2 class="bg-yellow-400 rounded-t text-lg md:text-xl font-semibold text-gray-900">ISYA</h2>
                 <p id="isya-time" class="text-2xl md:text-3xl font-serif font-bold mt-1">00:00</p>
             </div>
         </footer>        
