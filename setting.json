@@ -14,9 +14,7 @@
     "countdownHtmlFile": "countdown.html",
     "contentUrls": [
         "welcome.html",
-        "keuangan.html",
-        "takmir.html",
-        "kegiatan.html",
-        "pengumuman.html"
+        "khotib.html",
+        "takmir.html"
     ]
 }

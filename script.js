@@ -466,6 +466,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         storeOriginalPrayerItemClasses(); // Simpan kelas asli setelah DOM siap
         
+        // Tambahkan prefix 'pages/' ke contentUrls setelah dimuat dari settings
+        if (settings.contentUrls && Array.isArray(settings.contentUrls)) {
+            settings.contentUrls = settings.contentUrls.map(url => {
+                // Hanya tambahkan prefix jika belum ada untuk menghindari pages/pages/
+                return url.startsWith('pages/') ? url : `pages/${url}`;
+            });
+        }
         PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status tarhim
 
         updateClock(); // Panggil sekali untuk tampilan awal
