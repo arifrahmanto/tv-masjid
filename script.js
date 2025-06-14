@@ -1,9 +1,35 @@
 // script.js
 document.addEventListener('DOMContentLoaded', () => {
+    // --- KONFIGURASI & KONSTANTA ---
+    const PRAYER_ORDER = ['imsak', 'subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
+    const HIGHLIGHT_BG_CLASS = 'bg-yellow-400';
+    const HIGHLIGHT_TEXT_H2_CLASS = 'text-black';
+    const HIGHLIGHT_TEXT_P_CLASS = 'text-black';
+    const PRAYER_NAMES_ID = {
+        imsak: 'Imsak', subuh: 'Subuh', dzuhur: 'Dzuhur',
+        ashar: 'Ashar', maghrib: 'Maghrib', isya: 'Isya'
+    };
+
+    // Default settings, akan ditimpa oleh setting.json
+    let settings = {
+        pageTitle: "Judul Default Masjid",
+        marqueeText: ["Selamat Datang"],
+        prayerApiCity: 'Jakarta',
+        prayerApiTune: '3,3,3,3,3,3,3,3,3',
+        tarhimOffsetMinutes: 6,
+        tarhimAudioFile: 'tarhim.mp3',
+        beepAudioFile: 'beep.mp3',
+        countdownSecondsThreshold: 100,
+        countdownHtmlFile: 'countdown.html',
+        contentUrls: ['welcome.html']
+    };
+
+    // --- ELEMEN DOM ---
     const currentTimeElement = document.getElementById('current-time');
     const currentDateElement = document.getElementById('current-date');
     const titleElement = document.getElementById('title');
     const marqueeElement = document.querySelector('.marquee');
+    const mainContentElement = document.querySelector('main');
     const prayerTimeElements = {
         subuh: document.getElementById('subuh-time'),
         dzuhur: document.getElementById('dzuhur-time'),
@@ -13,60 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
         imsak: document.getElementById('imsak-time'),
     };
 
-    const PRAYER_ORDER = ['imsak', 'subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];
-    const HIGHLIGHT_BG_CLASS = 'bg-yellow-400'; // Warna latar highlight (Tailwind class)
-    const HIGHLIGHT_TEXT_H2_CLASS = 'text-black'; // Warna teks judul highlight
-    const HIGHLIGHT_TEXT_P_CLASS = 'text-black';   // Warna teks waktu highlight
-
+    // --- VARIABEL STATE ---
     const prayerItemOriginalClasses = {};
-    let hijriDateString = ''; // Variabel untuk menyimpan tanggal Hijriah
-    let tarhimPlayedFor = {}; // Objek untuk melacak status pemutaran tarhim
-    PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status
-    let tarhimAudio = null; // Objek untuk audio tarhim
-
-    let isCountdownActive = false; // Status apakah countdown sedang aktif/ditampilkan
-    let activeCountdownPrayerKey = null; // Menyimpan key sholat yang countdownnya aktif
-    let previousMainContentHTML = ''; // Untuk menyimpan konten <main> sebelum countdown
-
-    // Nama sholat dalam Bahasa Indonesia untuk tampilan countdown
-    const PRAYER_NAMES_ID = {
-        imsak: 'Imsak', subuh: 'Subuh', dzuhur: 'Dzuhur',
-        ashar: 'Ashar', maghrib: 'Maghrib', isya: 'Isya'
-    };
-
-    // Default settings, will be overridden by setting.json
-    let settings = {
-        prayerApiCity: 'Demak',
-        prayerApiTune: '3,3,3,3,3,3,3,3,3', // Default tune for Indonesia
-        tarhimOffsetMinutes: 6,
-        tarhimAudioFile: 'tarhim.mp3',
-        beepAudioFile: 'beep.mp3',
-        countdownSecondsThreshold: 100,
-        countdownHtmlFile: 'countdown.html',
-        contentUrls: ['welcome.html'] // Default jika setting.json gagal atau tidak ada
-    };
-
-    const mainContentElement = document.querySelector('main');
-    // Variabel contentUrls akan diambil dari settings.contentUrls
+    let hijriDateString = '';
+    let tarhimPlayedFor = {};
+    let tarhimAudio = null;
+    let isCountdownActive = false;
+    let activeCountdownPrayerKey = null;
+    let previousMainContentHTML = '';
     let currentContentIndex = 0; 
     let cycleContentIntervalId = null; // Untuk menyimpan ID interval cycleContent
 
-    // Simpan kelas warna asli saat halaman dimuat
-    PRAYER_ORDER.forEach(key => {
-        const pElement = prayerTimeElements[key]; // Ini adalah elemen <p> untuk waktu
-        if (pElement) {
-            const itemDiv = pElement.parentElement; // Ini adalah div .prayer-time-item
-            const h2Element = itemDiv.querySelector('h2');
-
-            prayerItemOriginalClasses[key] = {
-                itemBg: Array.from(itemDiv.classList).find(c => c.startsWith('bg-')),
-                h2Text: Array.from(h2Element.classList).find(c => c.startsWith('text-')),
-                // Untuk elemen <p> waktu, warna teks mungkin diwariskan atau spesifik
-                pText: Array.from(pElement.classList).find(c => c.startsWith('text-'))
-            };
-        }
-    });
-
+    // --- FUNGSI PEMBARUAN UI & JAM ---
     function updateClock() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
@@ -83,11 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fungsi untuk mengambil dan menampilkan jadwal sholat
-    // Untuk contoh ini, kita akan menggunakan data statis.
-    // Dalam aplikasi nyata, Anda akan mengambil data ini dari API.
+    function scheduleNextMidnightFetch() {
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 500); // Pukul 00:00:00.500 hari berikutnya
+        const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+        setTimeout(async () => {
+            console.log("Fetching prayer times at midnight...");
+            await fetchAndDisplayPrayerTimes();
+            scheduleNextMidnightFetch(); // Jadwalkan lagi untuk tengah malam berikutnya
+        }, msUntilMidnight);
+    }
+
+    // --- LOGIKA JADWAL SHOLAT ---
     async function fetchAndDisplayPrayerTimes() {
-        // Reset status pemutaran tarhim untuk hari/fetch baru
+        // Reset status pemutaran tarhim untuk hari/fetch baru (jika diperlukan di sini)
         PRAYER_ORDER.forEach(key => {
             tarhimPlayedFor[key] = false;
         });
@@ -96,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const year = today.getFullYear();
         const month = today.getMonth() + 1; // Bulan dimulai dari 0
         const day = today.getDate();
-        // Ganti dengan kota yang diinginkan atau implementasikan deteksi lokasi
         const country = 'ID'; // Asumsi negara tetap Indonesia
         // Metode kalkulasi bisa disesuaikan. Method 20 adalah Kemenag Indonesia.
         const method = 20; // Ganti dengan metode yang sesuai jika perlu
@@ -213,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- LOGIKA AUDIO ---
     function getTarhimAudio() {
         if (!tarhimAudio) {
             tarhimAudio = new Audio(settings.tarhimAudioFile);
@@ -273,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- LOGIKA COUNTDOWN ---
     // Fungsi untuk memperbarui elemen DOM pada tampilan countdown
     function updateCountdownDOM(prayerKey, secondsLeft) {
         const prayerNameEl = document.getElementById('countdown-prayer-name');
@@ -366,6 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- LOGIKA SIKLUS KONTEN ---
     async function loadContentIntoMain(url) {
         if (!mainContentElement) return;
         try {
@@ -417,18 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function scheduleNextMidnightFetch() {
-        const now = new Date();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 500); // Pukul 00:00:00.500 hari berikutnya
-        const msUntilMidnight = tomorrow.getTime() - now.getTime();
-
-        setTimeout(async () => {
-            console.log("Fetching prayer times at midnight...");
-            await fetchAndDisplayPrayerTimes();
-            scheduleNextMidnightFetch(); // Jadwalkan lagi untuk tengah malam berikutnya
-        }, msUntilMidnight);
-    }
-
+    // --- LOGIKA PENGATURAN ---
     async function loadSettings() {
         try {
             const response = await fetch('setting.json');
@@ -459,18 +444,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Panggil fungsi saat halaman dimuat
-    updateClock();
-    fetchAndDisplayPrayerTimes();
-    loadSettings(); // Muat pengaturan dari JSON
-    if (settings.contentUrls.length > 0) { // Periksa setelah settings dimuat
-        cycleContent(); // Muat konten pertama kali, fungsi ini akan mengatur interval jika perlu
-    }
-    scheduleNextMidnightFetch(); // Jadwalkan fetch pertama pada tengah malam berikutnya
+    // --- INISIALISASI ---
+    function storeOriginalPrayerItemClasses() {
+        PRAYER_ORDER.forEach(key => {
+            const pElement = prayerTimeElements[key];
+            if (pElement) {
+                const itemDiv = pElement.parentElement;
+                const h2Element = itemDiv.querySelector('h2');
 
-    // Perbarui jam setiap detik
-    setInterval(updateClock, 1000);
-    setInterval(highlightNextPrayer, 30000); // Perbarui highlight setiap 30 detik
-    setInterval(checkAndPlayTarhim, 1000);   // Periksa dan putar tarhim setiap 1 detik
-    setInterval(checkAndManageCountdown, 1000); // Periksa dan kelola countdown setiap 1 detik
+                prayerItemOriginalClasses[key] = {
+                    itemBg: Array.from(itemDiv.classList).find(c => c.startsWith('bg-')),
+                    h2Text: Array.from(h2Element.classList).find(c => c.startsWith('text-')),
+                    pText: Array.from(pElement.classList).find(c => c.startsWith('text-'))
+                };
+            }
+        });
+    }
+
+    async function initializeApp() {
+        await loadSettings(); // Muat pengaturan terlebih dahulu
+
+        storeOriginalPrayerItemClasses(); // Simpan kelas asli setelah DOM siap
+        
+        PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status tarhim
+
+        updateClock(); // Panggil sekali untuk tampilan awal
+        fetchAndDisplayPrayerTimes(); // Ambil jadwal sholat awal
+
+        if (settings.contentUrls && settings.contentUrls.length > 0) {
+            cycleContent(); // Mulai siklus konten
+        }
+
+        scheduleNextMidnightFetch(); // Jadwalkan pembaruan jadwal tengah malam
+
+        // Atur interval untuk pembaruan rutin
+        setInterval(updateClock, 1000);
+        setInterval(highlightNextPrayer, 30000);
+        setInterval(checkAndPlayTarhim, 1000);
+        setInterval(checkAndManageCountdown, 1000);
+    }
+
+    // Mulai aplikasi
+    initializeApp();
+
 });
