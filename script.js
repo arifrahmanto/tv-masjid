@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const currentTimeElement = document.getElementById('current-time');
     const currentDateElement = document.getElementById('current-date');
+    const titleElement = document.getElementById('title');
+    const marqueeElement = document.querySelector('.marquee');
     const prayerTimeElements = {
         subuh: document.getElementById('subuh-time'),
         dzuhur: document.getElementById('dzuhur-time'),
@@ -16,20 +18,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const HIGHLIGHT_TEXT_H2_CLASS = 'text-black'; // Warna teks judul highlight
     const HIGHLIGHT_TEXT_P_CLASS = 'text-black';   // Warna teks waktu highlight
 
-    const TARHIM_OFFSET_MINUTES = 6; // Putar tarhim X menit sebelum waktu sholat
-    const TARHIM_AUDIO_FILE = 'tarhim.mp3'; // Nama file audio tarhim
-    const BEEP_AUDIO_FILE = 'beep.mp3'; // Nama file audio beep
-
     const prayerItemOriginalClasses = {};
     let hijriDateString = ''; // Variabel untuk menyimpan tanggal Hijriah
     let tarhimPlayedFor = {}; // Objek untuk melacak status pemutaran tarhim
     PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status
     let tarhimAudio = null; // Objek untuk audio tarhim
 
+    let isCountdownActive = false; // Status apakah countdown sedang aktif/ditampilkan
+    let activeCountdownPrayerKey = null; // Menyimpan key sholat yang countdownnya aktif
+    let previousMainContentHTML = ''; // Untuk menyimpan konten <main> sebelum countdown
+
+    // Nama sholat dalam Bahasa Indonesia untuk tampilan countdown
+    const PRAYER_NAMES_ID = {
+        imsak: 'Imsak', subuh: 'Subuh', dzuhur: 'Dzuhur',
+        ashar: 'Ashar', maghrib: 'Maghrib', isya: 'Isya'
+    };
+
+    // Default settings, will be overridden by setting.json
+    let settings = {
+        prayerApiCity: 'Demak',
+        prayerApiTune: '3,3,3,3,3,3,3,3,3', // Default tune for Indonesia
+        tarhimOffsetMinutes: 6,
+        tarhimAudioFile: 'tarhim.mp3',
+        beepAudioFile: 'beep.mp3',
+        countdownSecondsThreshold: 100,
+        countdownHtmlFile: 'countdown.html',
+        contentUrls: ['welcome.html'] // Default jika setting.json gagal atau tidak ada
+    };
+
     const mainContentElement = document.querySelector('main');
-    const contentUrls = ['welcome.html', 'keuangan.html', 'takmir.html', 'kegiatan.html', 'pengumuman.html'];
-    // const contentUrls = ['video.html'];
-    let currentContentIndex = 0;
+    // Variabel contentUrls akan diambil dari settings.contentUrls
+    let currentContentIndex = 0; 
     let cycleContentIntervalId = null; // Untuk menyimpan ID interval cycleContent
 
     // Simpan kelas warna asli saat halaman dimuat
@@ -78,15 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = today.getMonth() + 1; // Bulan dimulai dari 0
         const day = today.getDate();
         // Ganti dengan kota yang diinginkan atau implementasikan deteksi lokasi
-        const city = 'Demak'; 
-        const country = 'ID';
-        const tune = '3,3,3,3,3,3,3,3,3'; // Ini adalah contoh untuk Indonesia, bisa disesuaikan dengan kebutuhan
+        const country = 'ID'; // Asumsi negara tetap Indonesia
         // Metode kalkulasi bisa disesuaikan. Method 20 adalah Kemenag Indonesia.
         const method = 20; // Ganti dengan metode yang sesuai jika perlu
 
         try {
             // Menggunakan tanggal saat ini untuk URL API
-            const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=${method}&month=${month}&year=${year}&tune=${tune}`);
+            const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${settings.prayerApiCity}&country=${country}&method=${method}&month=${month}&year=${year}&tune=${settings.prayerApiTune}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -198,9 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getTarhimAudio() {
         if (!tarhimAudio) {
-            tarhimAudio = new Audio(TARHIM_AUDIO_FILE);
+            tarhimAudio = new Audio(settings.tarhimAudioFile);
             tarhimAudio.onerror = () => {
-                console.error(`Error loading tarhim audio: ${TARHIM_AUDIO_FILE}`);
+                console.error(`Error loading tarhim audio: ${settings.tarhimAudioFile}`);
                 tarhimAudio = null; // Izinkan percobaan ulang pada panggilan berikutnya jika pemuatan gagal
             };
         }
@@ -212,6 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const nowTime = now.getTime();
 
         PRAYER_ORDER.forEach(key => {
+            if (key === 'imsak') {
+                return; // Jangan putar tarhim untuk Imsak
+            }
+
             if (tarhimPlayedFor[key]) { // Jika sudah diputar untuk sholat ini hari ini
                 return;
             }
@@ -228,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const prayerTimeMillis = prayerDateTime.getTime();
 
             // Hitung waktu mulai tarhim (X menit sebelum waktu sholat)
-            const tarhimStartTimeMillis = prayerTimeMillis - (TARHIM_OFFSET_MINUTES * 60 * 1000);
+            const tarhimStartTimeMillis = prayerTimeMillis - (settings.tarhimOffsetMinutes * 60 * 1000);
             // Batas akhir untuk memulai pemutaran tarhim (misalnya, dalam 1 menit dari waktu mulai tarhim yang dijadwalkan)
             const tarhimPlayWindowEndMillis = tarhimStartTimeMillis + (60 * 1000); 
 
@@ -239,13 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     audio.play().then(() => {
                         tarhimPlayedFor[key] = true; // Tandai tarhim sudah mulai diputar
 
-                        // Tambahkan event listener untuk 'ended'
                         audio.onended = () => {
-                            console.log(`Tarhim for ${key} finished. Playing beep.`);
-                            const beepAudio = new Audio(BEEP_AUDIO_FILE);
-                            beepAudio.play().catch(e => {
-                                console.error(`Error playing beep.mp3 for ${key}:`, e);
-                            });
+                            console.log(`Tarhim for ${key} finished.`);
                             audio.onended = null; // Hapus listener setelah selesai
                         };
                     }).catch(e => {
@@ -257,6 +273,99 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Fungsi untuk memperbarui elemen DOM pada tampilan countdown
+    function updateCountdownDOM(prayerKey, secondsLeft) {
+        const prayerNameEl = document.getElementById('countdown-prayer-name');
+        const secondsEl = document.getElementById('countdown-seconds');
+
+        if (prayerNameEl) {
+            prayerNameEl.textContent = PRAYER_NAMES_ID[prayerKey] || prayerKey.toUpperCase();
+        }
+        if (secondsEl) {
+            secondsEl.textContent = String(secondsLeft).padStart(2, '0');
+        }
+    }
+
+    // Fungsi untuk memeriksa dan mengatur tampilan countdown
+    async function checkAndManageCountdown() {
+        if (!mainContentElement) return;
+
+        let prayerToCountdown = null;
+        let secondsToPrayer = Infinity;
+        const now = new Date();
+        const nowTime = now.getTime();
+
+        for (const key of PRAYER_ORDER) {
+            // Anda bisa mengecualikan Imsak dari countdown jika diinginkan
+            // if (key === 'imsak') continue; 
+
+            const pElement = prayerTimeElements[key];
+            if (!pElement || !pElement.textContent || pElement.textContent === 'N/A' || pElement.textContent === 'Error' || !pElement.textContent.includes(':')) {
+                continue;
+            }
+            const timeStr = pElement.textContent;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) continue;
+
+            const prayerDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+            const prayerTimeMillis = prayerDateTime.getTime();
+            const diffSeconds = Math.round((prayerTimeMillis - nowTime) / 1000);
+
+            if (diffSeconds > 0 && diffSeconds <= settings.countdownSecondsThreshold) {
+                if (diffSeconds < secondsToPrayer) { // Pilih sholat terdekat untuk countdown
+                    secondsToPrayer = diffSeconds;
+                    prayerToCountdown = key;
+                }
+            }
+        }
+
+        if (prayerToCountdown) { // Ada sholat dalam jendela countdown
+            if (!isCountdownActive) { // Countdown belum aktif, mulai tampilkan
+                isCountdownActive = true;
+                activeCountdownPrayerKey = prayerToCountdown;
+                previousMainContentHTML = mainContentElement.innerHTML;
+
+                if (cycleContentIntervalId) {
+                    clearInterval(cycleContentIntervalId);
+                    cycleContentIntervalId = null; // Hentikan siklus konten
+                }
+                
+                const loadedSuccessfully = await loadContentIntoMain(settings.countdownHtmlFile);
+                if (loadedSuccessfully) {
+                    updateCountdownDOM(activeCountdownPrayerKey, secondsToPrayer);
+                } else { // Gagal memuat countdown.html, kembalikan state
+                    isCountdownActive = false;
+                    activeCountdownPrayerKey = null;
+                    mainContentElement.innerHTML = previousMainContentHTML;
+                    previousMainContentHTML = '';
+                    if (settings.contentUrls.length > 0) cycleContent(); // Coba mulai lagi siklus konten
+                    return;
+                }
+            } else if (activeCountdownPrayerKey === prayerToCountdown) { // Countdown sudah aktif untuk sholat ini
+                updateCountdownDOM(activeCountdownPrayerKey, secondsToPrayer); // Update detik
+            } else { // Countdown aktif untuk sholat lain, tapi ada yg lebih dekat/baru masuk window
+                activeCountdownPrayerKey = prayerToCountdown; // Ganti ke sholat baru
+                // Asumsikan loadContentIntoMain akan menimpa konten jika countdown.html sudah ada
+                const loadedSuccessfully = await loadContentIntoMain(settings.countdownHtmlFile); 
+                if (loadedSuccessfully) updateCountdownDOM(activeCountdownPrayerKey, secondsToPrayer);
+                // else: handle error loading, though less likely if already loaded once
+            }
+        } else { // Tidak ada sholat dalam jendela countdown
+            if (isCountdownActive) { // Jika countdown sedang aktif, hentikan
+                isCountdownActive = false;
+                activeCountdownPrayerKey = null;
+                mainContentElement.innerHTML = previousMainContentHTML;
+                previousMainContentHTML = '';
+                // Putar beep karena countdown selesai
+                const beepAudio = new Audio(settings.beepAudioFile);
+                beepAudio.play().catch(e => {
+                    console.error(`Error playing beep.mp3 after countdown:`, e);
+                });
+                if (settings.contentUrls.length > 0) cycleContent(); // Mulai lagi siklus konten
+            }
+        }
+    }
+
     async function loadContentIntoMain(url) {
         if (!mainContentElement) return;
         try {
@@ -266,24 +375,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const htmlContent = await response.text();
             mainContentElement.innerHTML = htmlContent;
+            return true; // Berhasil
         } catch (error) {
             console.error("Error memuat konten ke main:", error);
             mainContentElement.innerHTML = `<p class="text-red-500 text-center">Gagal memuat konten.</p>`;
+            return false; // Gagal
         }
     }
 
     async function cycleContent() {
-        if (contentUrls.length === 0) {
+        if (isCountdownActive) return; // Jangan siklus konten jika countdown aktif
+
+        if (settings.contentUrls.length === 0) {
             // console.log("Tidak ada URL konten untuk di-siklus.");
             return;
         }
 
-        const urlToLoad = contentUrls[currentContentIndex];
+        const urlToLoad = settings.contentUrls[currentContentIndex];
         // console.log(`Memuat konten: ${urlToLoad}`);
         await loadContentIntoMain(urlToLoad);
 
         // Pindahkan ke indeks berikutnya untuk siklus potensial berikutnya
-        currentContentIndex = (currentContentIndex + 1) % contentUrls.length;
+        currentContentIndex = (currentContentIndex + 1) % settings.contentUrls.length;
 
         if (urlToLoad === 'video.html') {
             // Jika video YouTube ditampilkan, hentikan siklus
@@ -294,10 +407,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             // Jika konten bukan video YouTube, dan siklus dihentikan, dan ada lebih dari satu item, mulai lagi
-            if (cycleContentIntervalId === null && contentUrls.length > 1) {
+            if (cycleContentIntervalId === null && settings.contentUrls.length > 1) {
                 // console.log('Melanjutkan siklus konten untuk konten non-video.');
                 cycleContentIntervalId = setInterval(cycleContent, 10000); // Ganti konten setiap 10 detik
-            } else if (cycleContentIntervalId === null && contentUrls.length <= 1) {
+            } else if (cycleContentIntervalId === null && settings.contentUrls.length <= 1) {
                 // Hanya satu item dan itu bukan kegiatan.html. Sudah dimuat. Tidak perlu interval.
                 // console.log('Konten tunggal non-video ditampilkan. Tidak perlu siklus.');
             }
@@ -316,10 +429,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }, msUntilMidnight);
     }
 
+    async function loadSettings() {
+        try {
+            const response = await fetch('setting.json');
+            if (!response.ok) {
+                throw new Error(`Gagal memuat setting.json: ${response.status}`);
+            }
+            const loadedSettings = await response.json();
+
+            // Gabungkan pengaturan yang dimuat dengan default, yang dimuat lebih diprioritaskan
+            settings = { ...settings, ...loadedSettings };
+            
+            // Terapkan pengaturan yang mungkin tidak ada di objek 'settings' awal
+            if (settings.pageTitle && titleElement) { // 'pageTitle' sudah ada di 'settings' awal jika file gagal dimuat
+                titleElement.textContent = settings.pageTitle;
+            }
+            if (marqueeElement) { // marqueeElement selalu ada
+                if (Array.isArray(settings.marqueeText)) {
+                    // Jika marqueeText adalah array, gabungkan elemen-elemennya
+                    marqueeElement.textContent = settings.marqueeText.join("  ---  ");
+                } else if (typeof settings.marqueeText === 'string') { // Jika string (misalnya dari default atau file lama)
+                    marqueeElement.textContent = settings.marqueeText; // Jika masih string (untuk backward compatibility)
+                } else {
+                    marqueeElement.textContent = ""; // Kosongkan jika tidak ada atau tipe salah
+                }
+            }
+        } catch (error) {
+            console.error("Error memuat atau menerapkan pengaturan:", error);
+        }
+    }
+
     // Panggil fungsi saat halaman dimuat
     updateClock();
     fetchAndDisplayPrayerTimes();
-    if (contentUrls.length > 0) {
+    loadSettings(); // Muat pengaturan dari JSON
+    if (settings.contentUrls.length > 0) { // Periksa setelah settings dimuat
         cycleContent(); // Muat konten pertama kali, fungsi ini akan mengatur interval jika perlu
     }
     scheduleNextMidnightFetch(); // Jadwalkan fetch pertama pada tengah malam berikutnya
@@ -327,5 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Perbarui jam setiap detik
     setInterval(updateClock, 1000);
     setInterval(highlightNextPrayer, 30000); // Perbarui highlight setiap 30 detik
-    setInterval(checkAndPlayTarhim, 1000); // Periksa dan putar tarhim setiap 1 detik
+    setInterval(checkAndPlayTarhim, 1000);   // Periksa dan putar tarhim setiap 1 detik
+    setInterval(checkAndManageCountdown, 1000); // Periksa dan kelola countdown setiap 1 detik
 });

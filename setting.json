@@ -1,0 +1,22 @@
+{
+    "pageTitle": "MASJID AT-TAQWA BANJARSARI",
+    "marqueeText": [
+        "Selamat datang di Masjid At-Taqwa Banjarsari. Mohon jaga kebersihan dan ketenangan.",
+        "Pengajian rutin setiap malam Jumat.",
+        "DKM Masjid At-Taqwa mengucapkan selamat menunaikan ibadah."
+    ],
+    "prayerApiCity": "Demak",
+    "prayerApiTune": "3,3,3,3,3,3,3,3,3",
+    "tarhimOffsetMinutes": 6,
+    "tarhimAudioFile": "tarhim.mp3",
+    "beepAudioFile": "beep.mp3",
+    "countdownSecondsThreshold": 100,
+    "countdownHtmlFile": "countdown.html",
+    "contentUrls": [
+        "welcome.html",
+        "keuangan.html",
+        "takmir.html",
+        "kegiatan.html",
+        "pengumuman.html"
+    ]
+}
