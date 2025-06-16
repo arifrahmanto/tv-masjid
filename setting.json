@@ -1,9 +1,26 @@
 {
     "pageTitle": "MASJID AT-TAQWA BANJARSARI",
     "marqueeText": [
-        "Selamat datang di Masjid At-Taqwa Banjarsari. Mohon jaga kebersihan dan ketenangan.",
-        "Pengajian rutin setiap malam Jumat.",
-        "DKM Masjid At-Taqwa mengucapkan selamat menunaikan ibadah."
+        ".:: Kas Pembangunan Masjid At-Taqwa Banjasari : ",
+        "(05/06/2025) Material dan Pekerja : -13.000.000",
+        "(05/06/2025) Material : -500.000",
+        "(06/06/2025) Maskan bin Jasmin : 4.000.000",
+        "(11/06/2025) Keluarga Masijan & H. Surimin : 280.000.000",
+        "(11/06/2025) Jimpitan Mei 2025 : 5.700.000",
+        "(12/06/2025) Pekerja : -9.500.000",
+        "(12/06/2025) Material : -12.000.000",
+        "(13/06/2025) Zumroh : 1.000.000",
+        ".:: Kas Takmir Masjid At-Taqwa Banjasari : ",
+        "(01/06/2025) Bisaroh Muadzin : -600.000",
+        "(01/06/2025) Bahan Bakar : -150.000",
+        "(06/06/2025) Baygon, Baterai dll : -150.000",
+        "(06/06/2025) Jariyah Idul Adha : 3.700.000",
+        "(06/06/2025) Jariyah Jamaah Shalat Jumat : 1.773.000",
+        "(06/06/2025) Kotak Amal : 12.292.000",
+        "(08/06/2025) Pembelian Alat Kebersihan : -350.000",
+        "(13/06/2025) Jariyah Jamaah Shalat Jumat : 1.593.000",
+        ".:: Informasi Keuangan Masjid At-Taqwa Banjasari :",
+        "https://s.id/KasMasjidBanjarsari  ::."
     ],
     "prayerApiCity": "Demak",
     "prayerApiTune": "3,3,3,3,3,3,3,3,3",
@@ -12,8 +29,9 @@
     "beepAudioFile": "beep.mp3",
     "countdownSecondsThreshold": 100,
     "countdownHtmlFile": "countdown.html",
-    "contentUrls": [
+    "contentUrls": [        
         "welcome.html",
+        "keuangan.html",
         "khotib.html",
         "takmir.html"
     ]

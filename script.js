@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (marqueeElement) { // marqueeElement selalu ada
                 if (Array.isArray(settings.marqueeText)) {
                     // Jika marqueeText adalah array, gabungkan elemen-elemennya
-                    marqueeElement.textContent = settings.marqueeText.join("  ---  ");
+                    marqueeElement.textContent = settings.marqueeText.join(" .:. ");
                 } else if (typeof settings.marqueeText === 'string') { // Jika string (misalnya dari default atau file lama)
                     marqueeElement.textContent = settings.marqueeText; // Jika masih string (untuk backward compatibility)
                 } else {
