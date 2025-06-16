@@ -23,7 +23,7 @@
         "https://s.id/KasMasjidBanjarsari  ::."
     ],
     "prayerApiCity": "Demak",
-    "prayerApiTune": "3,3,3,3,3,3,3,3,3",
+    "prayerApiTune": "2,2,3,4,3,3,3,3,3",
     "tarhimOffsetMinutes": 6,
     "tarhimAudioFile": "tarhim.mp3",
     "beepAudioFile": "beep.mp3",
@@ -34,5 +34,19 @@
         "keuangan.html",
         "khotib.html",
         "takmir.html"
+    ],
+    "audioSchedule": [
+        {
+            "dayofWeek": 5,
+            "audioFile": "audio/yasin.mp3",
+            "timeOffsetMinutes": -60,
+            "relativeToPrayer": "dzuhur"
+        },
+        {
+            "dayofWeek": 4,
+            "audioFile": "audio/insyirah.mp3",
+            "timeOffsetMinutes": -50,
+            "relativeToPrayer": "ashar"
+        }
     ]
 }
