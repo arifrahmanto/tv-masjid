@@ -46,7 +46,7 @@
             "dayofWeek": 4,
             "audioFile": "audio/insyirah.mp3",
             "timeOffsetMinutes": -50,
-            "relativeToPrayer": "ashar"
+            "relativeToPrayer": "maghrib"
         }
     ]
 }
