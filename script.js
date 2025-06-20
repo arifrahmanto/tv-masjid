@@ -61,12 +61,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = String(now.getSeconds()).padStart(2, '0');
         currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
 
+        // Hitung hari pasaran Jawa
+        const PASARAN = ['Kliwon', 'Legi', 'Pahing', 'Pon', 'Wage'];
+        // Titik referensi: 1 Januari 1900 adalah Minggu Legi.
+        // Dalam siklus 5 harian, Legi adalah hari ke-2 (indeks 1 jika 0-indexed)
+        // Dalam siklus 7 harian, Minggu adalah hari ke-1 (indeks 0 jika 0-indexed)
+        // Total hari sejak 1 Jan 1900 (UTC)
+        const refDate = Date.UTC(1900, 0, 1); // 1 Januari 1900
+        const currentDateUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffDays = Math.floor((currentDateUTC - refDate) / (1000 * 60 * 60 * 24));
+
+        // Indeks pasaran: (jumlah hari + offset pasaran referensi) % 5
+        // 1 Jan 1900 adalah Legi (indeks 1). Jadi offsetnya adalah 1.
+        const pasaranIndex = (diffDays + 1) % 5;
+        const hariPasaran = PASARAN[pasaranIndex];
+
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        let gregorianDateText = now.toLocaleDateString('id-ID', options);
-        if (hijriDateString) {
-            currentDateElement.textContent = `${gregorianDateText} / ${hijriDateString}`;
+        const gregorianDateFullString = now.toLocaleDateString('id-ID', options); // Hasilnya seperti "Senin, 1 Januari 2024"
+        
+        let formattedGregorianWithPasaran;
+        // Pisahkan nama hari dari sisa tanggal berdasarkan koma
+        const dateParts = gregorianDateFullString.split(', ');
+
+        if (dateParts.length === 2) {
+            const namaHari = dateParts[0]; // Bagian sebelum koma, misal "Senin"
+            const sisaTanggal = dateParts[1]; // Bagian setelah koma, misal "1 Januari 2024"
+            // Bentuk format baru: [nama hari] [pasaran jawa], [tanggal bulan tahun]
+            formattedGregorianWithPasaran = `${namaHari} ${hariPasaran}, ${sisaTanggal}`;
         } else {
-            currentDateElement.textContent = gregorianDateText;
+            // Fallback jika format dari toLocaleDateString tidak mengandung koma seperti yang diharapkan.
+            // Dalam kasus ini, kita tambahkan pasaran di akhir string Masehi asli.
+            console.warn(`Format tanggal dari toLocaleDateString ('${gregorianDateFullString}') tidak seperti yang diharapkan (tidak ada koma setelah nama hari). Menggunakan format fallback untuk penempatan pasaran.`);
+            formattedGregorianWithPasaran = `${gregorianDateFullString} ${hariPasaran}`;
+        }
+
+        if (hijriDateString) {
+            currentDateElement.textContent = `${formattedGregorianWithPasaran} / ${hijriDateString}`;
+        } else {
+            currentDateElement.textContent = formattedGregorianWithPasaran;
         }
     }
 
