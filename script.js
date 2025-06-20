@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
 
         // Hitung hari pasaran Jawa
-        const PASARAN = ['Kliwon', 'Legi', 'Pahing', 'Pon', 'Wage'];
+        const PASARAN = ['Legi', 'Pahing', 'Pon', 'Wage', 'Kliwon'];
         // Titik referensi: 1 Januari 1900 adalah Minggu Legi.
         // Dalam siklus 5 harian, Legi adalah hari ke-2 (indeks 1 jika 0-indexed)
         // Dalam siklus 7 harian, Minggu adalah hari ke-1 (indeks 0 jika 0-indexed)
