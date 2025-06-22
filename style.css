@@ -8,6 +8,15 @@
 body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Terapkan Poppins sebagai font default untuk seluruh halaman */
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Kelas kustom untuk font waktu sholat */
+.font-time {
+    /* Gunakan Roboto Mono untuk tampilan seperti jam digital,
+       dengan fallback ke font monospace generik. */
+    font-family: 'Poppins', sans-serif;
 }
 
 .prayer-time-item {
@@ -21,7 +30,7 @@ body {
 .marquee {
     display: inline-block;
     padding-left: 100%; /* Mulai dari luar layar kanan */
-    animation: marquee 90s linear infinite;
+    animation: marquee 120s linear infinite;
 }
 
 @keyframes marquee {

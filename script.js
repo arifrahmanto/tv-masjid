@@ -42,16 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- VARIABEL STATE ---
     const prayerItemOriginalClasses = {};
     let hijriDateString = '';
-    let tarhimPlayedFor = {}; // Untuk melacak Tarhim yang sudah diputar per sholat per hari
-    let tarhimAudio = null;
+    let tarhimPlayedFor = {}; // Melacak Tarhim yang sudah diputar per sholat per hari
     let scheduledAudiosState = []; // Untuk melacak state audio terjadwal
-    let activeScheduledAudioIndex = -1; // Indeks dari audio terjadwal yang sedang aktif
     let isCountdownActive = false;
     let activeCountdownPrayerKey = null; // Kunci sholat yang sedang di-countdown    
     let previousMainContentHTML = '';
     let currentContentIndex = 0;
     let cycleContentIntervalId = null; // Untuk menyimpan ID interval cycleContent
-    let audioContextUnlocked = false;
 
     // --- FUNGSI PEMBARUAN UI & JAM ---
     function updateClock() {
@@ -110,15 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(async () => {
             console.log("Fetching prayer times at midnight...");
             await fetchAndDisplayPrayerTimes();
-            // Reset status pemutaran audio terjadwal untuk hari berikutnya
-            scheduledAudiosState.forEach(state => {
-                state.playedThisSession = false;
-                if (state.audioObj && state.isCurrentlyPlaying) {
-                    state.audioObj.pause();
-                    state.audioObj.currentTime = 0;
-                }
-            });
-            activeScheduledAudioIndex = -1;
+            AudioManager.stopAll(); // Hentikan semua audio yang mungkin masih berjalan
+            // Reset status pemutaran untuk audio terjadwal di hari berikutnya
+            scheduledAudiosState.forEach(state => state.playedThisSession = false);
+            PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Reset status tarhim
             scheduleNextMidnightFetch(); // Jadwalkan lagi untuk tengah malam berikutnya
         }, msUntilMidnight);
     }
@@ -250,17 +242,106 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LOGIKA AUDIO ---
-    function getTarhimAudio() {
-        if (!tarhimAudio) {
-            tarhimAudio = new Audio(settings.tarhimAudioFile);
-            tarhimAudio.onerror = () => {
-                console.error(`Error loading tarhim audio: ${settings.tarhimAudioFile}`);
-                tarhimAudio = null; // Izinkan percobaan ulang pada panggilan berikutnya jika pemuatan gagal
+    // --- MANAJEMEN AUDIO ---
+    const AudioManager = {
+        _audios: {}, // Cache untuk elemen audio: { key: { element: HTMLAudioElement, src: '...' } }
+        _contextUnlocked: false,
+        _activeAudioKey: null,
+
+        _createAudioElement(key, src, onEndedCallback) {
+            const audio = new Audio(src);
+            audio.onplay = () => {
+                this._activeAudioKey = key;
+                console.log(`Audio started: ${key}`);
             };
+            audio.onpause = () => { // Dipicu oleh .pause() dan saat audio selesai secara alami
+                if (this._activeAudioKey === key) {
+                    this._activeAudioKey = null;
+                }
+                console.log(`Audio stopped/paused: ${key}`);
+            };
+            audio.onended = () => {
+                console.log(`Audio finished: ${key}`);
+                if (onEndedCallback) {
+                    onEndedCallback();
+                }
+            };
+            audio.onerror = () => {
+                console.error(`Error loading audio: ${key} (${src})`);
+                delete this._audios[key]; // Hapus dari cache agar bisa dicoba lagi
+            };
+            return audio;
+        },
+
+        _getAudio(key, src, onEndedCallback = null) {
+            if (!this._audios[key] || this._audios[key].src !== src) {
+                this._audios[key] = {
+                    element: this._createAudioElement(key, src, onEndedCallback),
+                    src: src
+                };
+            }
+            return this._audios[key].element;
+        },
+
+        async play(key, src, options = {}) {
+            const { onEnded, stopOthers = true } = options;
+
+            if (stopOthers && this._activeAudioKey && this._activeAudioKey !== key) {
+                console.log(`Stopping active audio (${this._activeAudioKey}) to play ${key}.`);
+                this.stop(this._activeAudioKey);
+            }
+
+            if (this._activeAudioKey === key) return false; // Sudah diputar
+
+            const audio = this._getAudio(key, src, onEnded);
+            if (audio) {
+                try {
+                    await audio.play();
+                    return true;
+                } catch (e) {
+                    if (e.name === 'NotAllowedError') {
+                        console.warn(`Autoplay for ${key} was prevented. User interaction needed.`);
+                    } else {
+                        console.error(`Error playing audio ${key}:`, e);
+                    }
+                    return false;
+                }
+            }
+            return false;
+        },
+
+        stop(key) {
+            if (this._audios[key] && this._audios[key].element) {
+                const audio = this._audios[key].element;
+                if (!audio.paused) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }
+        },
+
+        stopAll() {
+            console.log("Stopping all managed audio.");
+            for (const key in this._audios) {
+                this.stop(key);
+            }
+        },
+
+        init() {
+            const unlockHandler = () => {
+                if (this._contextUnlocked) return;
+                const dummyAudio = new Audio();
+                dummyAudio.muted = true;
+                dummyAudio.play().then(() => {
+                    dummyAudio.pause();
+                    this._contextUnlocked = true;
+                    console.log("Audio context unlocked by user interaction.");
+                }).catch(() => {});
+            };
+            document.body.addEventListener('click', unlockHandler, { once: true });
+            document.body.addEventListener('touchend', unlockHandler, { once: true });
         }
-        return tarhimAudio;
-    }
+    };
 
     function checkAndPlayTarhim() {
         const now = new Date();
@@ -271,10 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // Jangan putar tarhim untuk Imsak
             }
 
-            if (tarhimPlayedFor[key]) { // Jika sudah diputar untuk sholat ini hari ini
-                return;
-            }
-
+            // Cek apakah sudah diputar untuk sholat ini hari ini
             const pElement = prayerTimeElements[key];
             if (!pElement || !pElement.textContent || pElement.textContent === 'N/A' || pElement.textContent === 'Error' || !pElement.textContent.includes(':')) {
                 return; // Lewati jika waktu tidak valid
@@ -291,77 +369,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // Batas akhir untuk memulai pemutaran tarhim (misalnya, dalam 1 menit dari waktu mulai tarhim yang dijadwalkan)
             const tarhimPlayWindowEndMillis = tarhimStartTimeMillis + (60 * 1000);
 
-            // Pemeriksaan untuk menghentikan audio terjadwal jika Tarhim akan diputar
             if (nowTime >= tarhimStartTimeMillis && nowTime < prayerTimeMillis && nowTime < tarhimPlayWindowEndMillis) {
-                if (activeScheduledAudioIndex !== -1) {
-                    const scheduledState = scheduledAudiosState[activeScheduledAudioIndex];
-                    if (scheduledState && scheduledState.audioObj && scheduledState.isCurrentlyPlaying) {
-                        console.log(`Stopping scheduled audio (${scheduledState.scheduleDetails.audioFile}) to play Tarhim for ${key}.`);
-                        scheduledState.audioObj.pause();
-                        // scheduledState.audioObj.currentTime = 0; // Opsional: reset audio jika diperlukan di sini
+                if (tarhimPlayedFor[key]) return; // Sudah diputar atau sedang diputar
+
+                // Coba putar Tarhim. AudioManager akan menangani penghentian audio lain.
+                AudioManager.play('tarhim', settings.tarhimAudioFile, {
+                    onEnded: () => {
+                        console.log(`Tarhim for ${key} finished.`);
+                        // Jika Tarhim selesai, dan tidak ada countdown, coba lanjutkan siklus konten
+                        if (!isCountdownActive && settings.contentUrls.length > 0 && cycleContentIntervalId === null) {
+                            cycleContent();
+                        }
                     }
-                }
-            }
-
-            if (nowTime >= tarhimStartTimeMillis && nowTime < prayerTimeMillis && nowTime < tarhimPlayWindowEndMillis) {
-                const audio = getTarhimAudio();
-                if (audio) {
-                    console.log(`Playing tarhim for ${key} (scheduled at ${new Date(tarhimStartTimeMillis).toLocaleTimeString()})`);
-                    audio.play().then(() => {
-                        tarhimPlayedFor[key] = true; // Tandai tarhim sudah mulai diputar
-
-                        audio.onended = () => {
-                            console.log(`Tarhim for ${key} finished.`);
-                            audio.onended = null; // Hapus listener setelah selesai
-                            // Jika Tarhim selesai, dan tidak ada countdown, coba lanjutkan siklus konten
-                            if (!isCountdownActive && settings.contentUrls.length > 0 && cycleContentIntervalId === null) {
-                                cycleContent();
-                            }
-                        };
-                    }).catch(e => {
-                        console.error(`Error playing tarhim for ${key}:`, e);
-                        // Jika tarhim gagal diputar, kita mungkin tidak ingin menandainya sebagai sudah diputar
+                }).then(playedSuccessfully => {
+                    if (playedSuccessfully) {
+                        console.log(`Tarhim for ${key} started successfully.`);
+                        tarhimPlayedFor[key] = true; // Tandai sudah diputar hanya jika berhasil
+                    }
                     });
-                }
             }
         });
-    }
-
-    // --- LOGIKA AUDIO TERJADWAL ---
-    function getScheduledAudio(scheduleIndex) {
-        if (scheduleIndex < 0 || scheduleIndex >= scheduledAudiosState.length) return null;
-        const state = scheduledAudiosState[scheduleIndex];
-        if (!state.audioObj) {
-            state.audioObj = new Audio(state.scheduleDetails.audioFile);
-            state.audioObj.onerror = () => {
-                console.error(`Error loading scheduled audio: ${state.scheduleDetails.audioFile}`);
-                state.audioObj = null; // Izinkan percobaan ulang
-            };
-            state.audioObj.onplay = () => {
-                state.isCurrentlyPlaying = true;
-                activeScheduledAudioIndex = scheduleIndex;
-                console.log(`Playing scheduled audio: ${state.scheduleDetails.audioFile}`);
-            };
-            state.audioObj.onended = () => {
-                state.isCurrentlyPlaying = false;
-                if (activeScheduledAudioIndex === scheduleIndex) {
-                    activeScheduledAudioIndex = -1;
-                }
-                console.log(`Scheduled audio finished: ${state.scheduleDetails.audioFile}`);
-                // Jika audio terjadwal selesai, dan tidak ada countdown, coba lanjutkan siklus konten
-                if (!isCountdownActive && settings.contentUrls.length > 0 && cycleContentIntervalId === null) {
-                    cycleContent();
-                }
-            };
-            state.audioObj.onpause = () => { // Mencakup pause() eksplisit atau stop
-                state.isCurrentlyPlaying = false;
-                if (activeScheduledAudioIndex === scheduleIndex) {
-                    activeScheduledAudioIndex = -1;
-                }
-                console.log(`Scheduled audio paused/stopped: ${state.scheduleDetails.audioFile}`);
-            };
-        }
-        return state.audioObj;
     }
 
     function checkAndPlayScheduledAudio() {
@@ -392,28 +419,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Mainkan jika waktu saat ini berada dalam jendela 1 menit dari waktu terjadwal
             if (now.getTime() >= scheduledPlayTime.getTime() && now.getTime() < scheduledPlayTime.getTime() + 60000) {
-                if (activeScheduledAudioIndex !== -1 && activeScheduledAudioIndex !== index) {
-                    const currentlyPlayingState = scheduledAudiosState[activeScheduledAudioIndex];
-                    if (currentlyPlayingState && currentlyPlayingState.audioObj && currentlyPlayingState.isCurrentlyPlaying) {
-                        console.log(`Stopping currently active scheduled audio (${currentlyPlayingState.scheduleDetails.audioFile}) to play ${schedule.audioFile}`);
-                        currentlyPlayingState.audioObj.pause(); // Handler onpause akan mengurus sisanya
-                    }
-                }
+                if (state.playedThisSession) return;
 
-                if (state.isCurrentlyPlaying) return; // Sudah diputar atau sedang diputar
-
-                const audio = getScheduledAudio(index);
-                if (audio) {
-                    audio.play().then(() => {
-                        state.playedThisSession = true; // Tandai sudah diputar untuk sesi ini
-                    }).catch(e => {
-                        if (e.name === 'NotAllowedError') {
-                            console.warn(`Gagal memutar audio terjadwal (${schedule.audioFile}) karena kebijakan autoplay browser. Interaksi pengguna (klik/sentuh) pada halaman mungkin diperlukan untuk mengaktifkan audio.`);
-                        } else {
-                            console.error(`Error memainkan audio terjadwal ${schedule.audioFile}:`, e);
+                const audioKey = `scheduled-${index}`;
+                AudioManager.play(audioKey, schedule.audioFile, {
+                    onEnded: () => {
+                        console.log(`Scheduled audio finished: ${schedule.audioFile}`);
+                        // Jika audio selesai, dan tidak ada countdown, coba lanjutkan siklus konten
+                        if (!isCountdownActive && settings.contentUrls.length > 0 && cycleContentIntervalId === null) {
+                            cycleContent();
                         }
-                    });
-                }
+                    }
+                }).then(playedSuccessfully => {
+                    if (playedSuccessfully) {
+                        state.playedThisSession = true; // Tandai sudah diputar untuk sesi ini
+                    }
+                });
             }
         });
     }
@@ -500,32 +521,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isCountdownActive) { // Jika countdown sedang aktif, hentikan
                 isCountdownActive = false;
                 activeCountdownPrayerKey = null;
-                mainContentElement.innerHTML = previousMainContentHTML;
+                await updateMainContent(previousMainContentHTML); // Gunakan fungsi baru untuk transisi halus
                 previousMainContentHTML = '';
-                // Putar beep karena countdown selesai
-                const beepAudio = new Audio(settings.beepAudioFile);
-                beepAudio.play().catch(e => {
-                    console.error(`Error playing beep.mp3 after countdown:`, e);
-                });
+                // Putar beep. `stopOthers: false` memastikan tidak menghentikan audio lain.
+                AudioManager.play('beep', settings.beepAudioFile, { stopOthers: false });
                 if (settings.contentUrls.length > 0) cycleContent(); // Mulai lagi siklus konten
             }
         }
     }
 
     // --- LOGIKA SIKLUS KONTEN ---
-    async function loadContentIntoMain(url) {
+    async function updateMainContent(newHtml) {
         if (!mainContentElement) return;
+
+        const FADE_DURATION_MS = 300; // Durasi animasi fade dalam milidetik (sesuaikan dengan CSS)
+
+        // 1. Fade out dengan menambahkan class
+        mainContentElement.classList.add('fade-out');
+
+        // 2. Tunggu animasi fade-out selesai
+        await new Promise(resolve => setTimeout(resolve, FADE_DURATION_MS));
+
+        // 3. Ganti konten saat elemen tidak terlihat
+        mainContentElement.innerHTML = newHtml;
+
+        // 4. Fade in dengan menghapus class
+        mainContentElement.classList.remove('fade-out');
+    }
+
+    async function loadContentIntoMain(url) {
+        if (!mainContentElement) return false;
         try {
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Gagal memuat konten: ${response.status} ${response.statusText}`);
             }
             const htmlContent = await response.text();
-            mainContentElement.innerHTML = htmlContent;
+            await updateMainContent(htmlContent); // Ganti konten dengan efek fade
             return true; // Berhasil
         } catch (error) {
             console.error("Error memuat konten ke main:", error);
-            mainContentElement.innerHTML = `<p class="text-red-500 text-center">Gagal memuat konten.</p>`;
+            await updateMainContent(`<p class="text-red-500 text-center">Gagal memuat konten.</p>`);
             return false; // Gagal
         }
     }
@@ -593,11 +629,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Inisialisasi state untuk audio terjadwal dari settings
             if (settings.audioSchedule && Array.isArray(settings.audioSchedule)) {
-                scheduledAudiosState = settings.audioSchedule.map(scheduleItem => ({
-                    audioObj: null,
+                // Hanya perlu melacak status 'played' untuk setiap jadwal.
+                // Detail jadwal akan diakses langsung dari `settings.audioSchedule`.
+                scheduledAudiosState = settings.audioSchedule.map(() => ({
                     playedThisSession: false,
-                    isCurrentlyPlaying: false,
-                    scheduleDetails: scheduleItem
                 }));
             } else { scheduledAudiosState = []; }
         } catch (error) {
@@ -607,48 +642,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INISIALISASI ---
     function storeOriginalPrayerItemClasses() {
+        // Regex untuk mengidentifikasi class ukuran font dari Tailwind agar tidak salah dianggap sebagai class warna.
+        const nonColorTextClasses = /text-(xs|sm|base|lg|xl|[2-9]xl)/;
+
         PRAYER_ORDER.forEach(key => {
             const pElement = prayerTimeElements[key];
             if (pElement) {
                 const itemDiv = pElement.parentElement;
                 const h2Element = itemDiv.querySelector('h2');
 
+                // Cari class warna yang sebenarnya dengan mengabaikan class ukuran font.
+                const h2ColorClass = Array.from(h2Element.classList).find(c => c.startsWith('text-') && !nonColorTextClasses.test(c));
+                const pColorClass = Array.from(pElement.classList).find(c => c.startsWith('text-') && !nonColorTextClasses.test(c));
+
                 prayerItemOriginalClasses[key] = {
                     itemBg: Array.from(itemDiv.classList).find(c => c.startsWith('bg-')),
-                    h2Text: Array.from(h2Element.classList).find(c => c.startsWith('text-')),
-                    pText: Array.from(pElement.classList).find(c => c.startsWith('text-'))
+                    h2Text: h2ColorClass, // Akan menjadi undefined jika tidak ada class warna
+                    pText: pColorClass
                 };
             }
         });
     }
 
-    function unlockAudio() {
-        if (audioContextUnlocked) return;
-        // Coba mainkan audio dummy atau salah satu audio yang ada dengan mute
-        // untuk "membangunkan" konteks audio browser.
-        const dummyAudio = new Audio(); // Audio kosong sudah cukup
-        dummyAudio.muted = true;
-        dummyAudio.play().then(() => {
-            dummyAudio.pause();
-            audioContextUnlocked = true;
-            console.log("Konteks audio kemungkinan telah diaktifkan oleh interaksi pengguna.");
-            // Hapus listener setelah berhasil
-            document.body.removeEventListener('click', unlockAudio);
-            document.body.removeEventListener('touchend', unlockAudio);
-        }).catch(() => {
-            // Gagal membuka kunci, mungkin perlu interaksi yang lebih eksplisit
-            // atau browser memiliki kebijakan yang lebih ketat.
-        });
-    }
-
     async function initializeApp() {
         await loadSettings(); // Muat pengaturan terlebih dahulu
-        unlockAudio(); // Coba buka kunci konteks audio
+        AudioManager.init(); // Siapkan AudioManager untuk menangani interaksi audio
         storeOriginalPrayerItemClasses(); // Simpan kelas asli setelah DOM siap
-
-        // Panggil unlockAudio saat initializeApp atau setelah loadSettings
-        document.body.addEventListener('click', unlockAudio, { once: true });
-        document.body.addEventListener('touchend', unlockAudio, { once: true });
 
         // Tambahkan prefix 'pages/' ke contentUrls setelah dimuat dari settings
         if (settings.contentUrls && Array.isArray(settings.contentUrls)) {
@@ -658,7 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         PRAYER_ORDER.forEach(key => tarhimPlayedFor[key] = false); // Inisialisasi status tarhim
-        activeScheduledAudioIndex = -1; // Inisialisasi audio terjadwal yang aktif
 
         updateClock(); // Panggil sekali untuk tampilan awal
         fetchAndDisplayPrayerTimes(); // Ambil jadwal sholat awal
