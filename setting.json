@@ -56,14 +56,14 @@
     "audioSchedule": [
         {
             "dayofWeek": 5,
-            "audioFile": "audio/yasin.mp3",
-            "timeOffsetMinutes": -60,
+            "audioFile": "audio/insyirah.mp3",
+            "timeOffsetMinutes": -75,
             "relativeToPrayer": "dzuhur"
         },
         {
             "dayofWeek": 4,
             "audioFile": "audio/insyirah.mp3",
-            "timeOffsetMinutes": -50,
+            "timeOffsetMinutes": -40,
             "relativeToPrayer": "maghrib"
         }
     ]
