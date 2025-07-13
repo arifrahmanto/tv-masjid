@@ -250,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         _createAudioElement(key, src, onEndedCallback) {
             const audio = new Audio(src);
+            audio.preload = 'auto'; // Memberi tahu browser untuk mengunduh file audio sepenuhnya
             audio.onplay = () => {
                 this._activeAudioKey = key;
                 console.log(`Audio started: ${key}`);
@@ -324,6 +325,14 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Stopping all managed audio.");
             for (const key in this._audios) {
                 this.stop(key);
+            }
+        },
+
+        preload(key, src) {
+            if (!this._audios[key] || this._audios[key].src !== src) {
+                console.log(`Preloading audio: ${key} (${src})`);
+                // Memanggil _getAudio akan membuat elemen dan browser akan mulai mengunduh/cache
+                this._getAudio(key, src);
             }
         },
 
@@ -667,6 +676,21 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeApp() {
         await loadSettings(); // Muat pengaturan terlebih dahulu
         AudioManager.init(); // Siapkan AudioManager untuk menangani interaksi audio
+
+        // Preload audio penting setelah pengaturan dimuat untuk memastikan pemutaran cepat
+        if (settings.tarhimAudioFile) {
+            AudioManager.preload('tarhim', settings.tarhimAudioFile);
+        }
+        if (settings.beepAudioFile) {
+            AudioManager.preload('beep', settings.beepAudioFile);
+        }
+        if (settings.audioSchedule && Array.isArray(settings.audioSchedule)) {
+            settings.audioSchedule.forEach((schedule, index) => {
+                if (schedule.audioFile) {
+                    AudioManager.preload(`scheduled-${index}`, schedule.audioFile);
+                }
+            });
+        }
         storeOriginalPrayerItemClasses(); // Simpan kelas asli setelah DOM siap
 
         // Tambahkan prefix 'pages/' ke contentUrls setelah dimuat dari settings
