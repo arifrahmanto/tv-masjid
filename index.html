@@ -5,23 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="title">Jam Shalat Masjid At-Taqwa Banjarsari</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- 1. Tambahkan link untuk Google Fonts (Poppins untuk teks umum, Roboto Mono untuk waktu) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@700&display=swap"
+        rel="stylesheet">
 
     <link href="style.css" rel="stylesheet">
 </head>
 
-<body class="bg-orange-950 text-white flex flex-col items-center justify-start min-h-screen">
+<body class="bg-orange-950 text-white flex flex-col items-center min-h-screen">
     <!-- Jadikan div ini sebagai flex container yang tumbuh dan menyusun anak-anaknya secara vertikal -->
     <div class="w-full shadow-2xl p-2 flex flex-col flex-grow">
         <!-- Jadikan header sebagai flex container untuk mengatur posisi anak-anaknya -->
         <header class="p-2 flex justify-between items-start">
             <!-- Grup untuk logo, title, dan current-date di kiri -->
             <div class="flex items-center"> <!-- Container untuk logo dan blok teks -->
-                <img src="mosque.svg" alt="Logo Masjid" class="h-12 mr-3"> <!-- Ganti 'logo.png' dengan path ke file logo Anda -->
+                <img src="mosque.svg" alt="Logo Masjid" class="h-12 mr-3">
+                <!-- Ganti 'logo.png' dengan path ke file logo Anda -->
                 <div class="text-left">
                     <p id="title" class="text-xl text-white font-bold">MASJID AT-TAQWA BANJARSARI</p>
                     <p id="current-date" class="text-gray-300">Senin, 1 Januari 2024</p>
@@ -32,42 +35,49 @@
             <h1 id="current-time" class="text-4xl font-bold text-yellow-400 font-time">00:00:00</h1>
         </header>
         <!-- Biarkan area konten utama ini tumbuh untuk mendorong footer ke bawah -->
-        <main class="h-[340px] flex flex-col justify-center bg-white items-center border-1 border-yellow-300 text-xl m-1 mt-0 p-2 pb-1 pt-1">            
-            
+        <main class="flex flex-col justify-center bg-white items-center border-1 border-yellow-300 text-xl m-1 mt-0 mb-0 p-2 pb-1 pt-1 flex-grow">
+            <!-- Replace with your actual main content -->
+            <div class="text-center">
+                Isi Konten Utama Disini
+            </div>
         </main>
         <!-- Running Text Section -->
-        <div class="mt-0 w-full overflow-hidden bg-orange-950 p-1 shadow-md">
-            <p class="marquee text-white whitespace-nowrap">
-                Selamat datang di Masjid At-Taqwa Banjarsari. Mohon jaga kebersihan dan ketenangan selama berada di area masjid. Terima kasih. --- Informasi kegiatan masjid: Pengajian rutin setiap malam Jumat. --- DKM Masjid At-Taqwa mengucapkan selamat menunaikan ibadah.
-            </p>
-        </div>
-        <!-- Prayer Times Section -->
-        <footer id="prayer-times" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-1 text-center">
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 rounded pt-0 shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">IMSAK</h2>
-                <p id="imsak-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+        <footer class="mt-auto">
+            <div class="mt-0 w-full overflow-hidden bg-orange-950 p-1 shadow-md">
+                <p class="marquee text-white whitespace-nowrap">
+                    Selamat datang di Masjid At-Taqwa Banjarsari. Mohon jaga kebersihan dan ketenangan selama berada di
+                    area masjid. Terima kasih. --- Informasi kegiatan masjid: Pengajian rutin setiap malam Jumat. ---
+                    DKM Masjid At-Taqwa mengucapkan selamat menunaikan ibadah.
+                </p>
             </div>
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">SUBUH</h2>
-                <p id="subuh-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+            <!-- Prayer Times Section -->
+            <div id="prayer-times" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-1 text-center">
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 rounded pt-0 shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">IMSAK</h2>
+                    <p id="imsak-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">SUBUH</h2>
+                    <p id="subuh-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">DZUHUR</h2>
+                    <p id="dzuhur-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">ASHAR</h2>
+                    <p id="ashar-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">MAGHRIB</h2>
+                    <p id="maghrib-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
+                <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
+                    <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">ISYA</h2>
+                    <p id="isya-time" class="font-time text-4xl font-bold mt-1">00:00</p>
+                </div>
             </div>
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">DZUHUR</h2>
-                <p id="dzuhur-time" class="font-time text-4xl font-bold mt-1">00:00</p>
-            </div>
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">ASHAR</h2>
-                <p id="ashar-time" class="font-time text-4xl font-bold mt-1">00:00</p>
-            </div>
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">MAGHRIB</h2>
-                <p id="maghrib-time" class="font-time text-4xl font-bold mt-1">00:00</p>
-            </div>
-            <div class="prayer-time-item bg-yellow-700 border-1 border-orange-300 pt-0 rounded shadow-md">
-                <h2 class="bg-orange-400 rounded-t text-lg font-semibold text-gray-900">ISYA</h2>
-                <p id="isya-time" class="font-time text-4xl font-bold mt-1">00:00</p>
-            </div>
-        </footer>        
+        </footer>
     </div>
 
     <script src="script.js"></script>
