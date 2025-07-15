@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await updateMainContent(previousMainContentHTML); // Gunakan fungsi baru untuk transisi halus
                 previousMainContentHTML = '';
                 // Putar beep. `stopOthers: false` memastikan tidak menghentikan audio lain.
-                AudioManager.play('beep', settings.beepAudioFile, { stopOthers: false });
+                // AudioManager.play('beep', settings.beepAudioFile, { stopOthers: false });
                 if (settings.contentUrls.length > 0) cycleContent(); // Mulai lagi siklus konten
             }
         }
@@ -681,9 +681,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settings.tarhimAudioFile) {
             AudioManager.preload('tarhim', settings.tarhimAudioFile);
         }
-        if (settings.beepAudioFile) {
-            AudioManager.preload('beep', settings.beepAudioFile);
-        }
+        // if (settings.beepAudioFile) {
+        //     AudioManager.preload('beep', settings.beepAudioFile);
+        // }
         if (settings.audioSchedule && Array.isArray(settings.audioSchedule)) {
             settings.audioSchedule.forEach((schedule, index) => {
                 if (schedule.audioFile) {
