@@ -63,8 +63,14 @@
     "audioSchedule": [
         {
             "dayofWeek": 5,
-            "audioFile": "audio/insyirah.mp3",
+            "audioFile": "audio/jumuah.mp3",
             "timeOffsetMinutes": -75,
+            "relativeToPrayer": "dzuhur"
+        },
+        {
+            "dayofWeek": 5,
+            "audioFile": "audio/insyirah.mp3",
+            "timeOffsetMinutes": -60,
             "relativeToPrayer": "dzuhur"
         },
         {
