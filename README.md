@@ -20,4 +20,6 @@ Aplikasi TV Masjid ini adalah aplikasi yang digunakan sebagai penunjuk waktu sha
 - Install browser di SmartTV, disarankan memakai Fully Kiosk Browser sehingga nanti bisa diatur sedemikian rupa sehingga aplikasi bisa berjalan begitu TV dinyalakan.
 - Set start URL di browser sesuai URL deployment https://[akun_github].github.io/[nama_repo] atau sesuai custom domain Anda
 - Atur pengaturan browser sehingga bisa autostart saat TV dinyalakan
-- Atur zoom pada browser. (biasanya diset ke 75%, tergantung jenis TV)
+
+## Keterangan
+Umumnya browser pada Android SmartTV menggunakan resolusi qHD(960x540) meskipun TV-nya sendiri mendukung resolusi 4K
