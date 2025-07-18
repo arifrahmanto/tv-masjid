@@ -116,6 +116,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LOGIKA JADWAL SHOLAT ---
+    // Helper untuk membuat kunci cache yang konsisten berdasarkan tanggal
+    function getCacheKeyForDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `prayerTimes-${year}-${month}-${day}`;
+    }
+
+    // Fungsi terpisah untuk memperbarui elemen waktu sholat di DOM
+    function displayPrayerTimes(scheduleData) {
+        if (scheduleData && typeof scheduleData === 'object' && scheduleData.timings && scheduleData.date) {
+            const timings = scheduleData.timings;
+            prayerTimeElements.imsak.textContent = timings.Imsak ? timings.Imsak.split(' ')[0] : 'N/A';
+            prayerTimeElements.subuh.textContent = timings.Fajr ? timings.Fajr.split(' ')[0] : 'N/A'; // Fajr adalah Subuh
+            prayerTimeElements.dzuhur.textContent = timings.Dhuhr ? timings.Dhuhr.split(' ')[0] : 'N/A';
+            prayerTimeElements.ashar.textContent = timings.Asr ? timings.Asr.split(' ')[0] : 'N/A';
+            prayerTimeElements.maghrib.textContent = timings.Maghrib ? timings.Maghrib.split(' ')[0] : 'N/A';
+            prayerTimeElements.isya.textContent = timings.Isha ? timings.Isha.split(' ')[0] : 'N/A';
+
+            // Ambil dan format tanggal Hijriah
+            const hijri = scheduleData.date.hijri;
+            if (hijri && hijri.day && hijri.month && hijri.month.en && hijri.year) {
+                hijriDateString = `${hijri.day} ${hijri.month.en} ${hijri.year} H`;
+            } else {
+                hijriDateString = ''; // Reset jika data Hijriah tidak lengkap
+            }
+            return true;
+        } else {
+            console.error("Data jadwal sholat tidak valid untuk ditampilkan:", scheduleData);
+            Object.values(prayerTimeElements).forEach(el => el.textContent = 'Error');
+            hijriDateString = ''; // Pastikan tanggal hijriah juga di-reset
+            return false;
+        }
+    }
+
     async function fetchAndDisplayPrayerTimes() {
         // Reset status pemutaran tarhim untuk hari/fetch baru (jika diperlukan di sini)
         PRAYER_ORDER.forEach(key => {
@@ -129,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const country = 'ID'; // Asumsi negara tetap Indonesia
         // Metode kalkulasi bisa disesuaikan. Method 20 adalah Kemenag Indonesia.
         const method = 20; // Ganti dengan metode yang sesuai jika perlu
+        const cacheKey = getCacheKeyForDate(today);
 
         try {
             // Menggunakan tanggal saat ini untuk URL API
@@ -147,34 +183,41 @@ document.addEventListener('DOMContentLoaded', () => {
             // Pastikan dailyScheduleData adalah objek yang valid, memiliki properti timings,
             // dan data tanggalnya sesuai dengan hari ini.
             if (dailyScheduleData && typeof dailyScheduleData === 'object' && dailyScheduleData.timings &&
-                dailyScheduleData.date && dailyScheduleData.date.gregorian &&
-                parseInt(dailyScheduleData.date.gregorian.day) === day) {
-                const timings = dailyScheduleData.timings;
-                prayerTimeElements.imsak.textContent = timings.Imsak ? timings.Imsak.split(' ')[0] : 'N/A';
-                prayerTimeElements.subuh.textContent = timings.Fajr ? timings.Fajr.split(' ')[0] : 'N/A'; // Fajr adalah Subuh
-                prayerTimeElements.dzuhur.textContent = timings.Dhuhr ? timings.Dhuhr.split(' ')[0] : 'N/A';
-                prayerTimeElements.ashar.textContent = timings.Asr ? timings.Asr.split(' ')[0] : 'N/A';
-                prayerTimeElements.maghrib.textContent = timings.Maghrib ? timings.Maghrib.split(' ')[0] : 'N/A';
-                prayerTimeElements.isya.textContent = timings.Isha ? timings.Isha.split(' ')[0] : 'N/A';
+                dailyScheduleData.date && dailyScheduleData.date.gregorian && parseInt(dailyScheduleData.date.gregorian.day) === day) {
+                
+                displayPrayerTimes(dailyScheduleData); // Tampilkan data yang baru diambil
 
-                // Ambil dan format tanggal Hijriah
-                const hijri = dailyScheduleData.date.hijri;
-                if (hijri && hijri.day && hijri.month && hijri.month.en && hijri.year) {
-                    hijriDateString = `${hijri.day} ${hijri.month.en} ${hijri.year} H`;
-                } else {
-                    hijriDateString = ''; // Reset jika data Hijriah tidak lengkap
+                // Simpan data yang berhasil diambil ke cache
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(dailyScheduleData));
+                    console.log(`Jadwal sholat untuk ${cacheKey} berhasil disimpan di cache.`);
+                } catch (e) {
+                    console.error("Gagal menyimpan jadwal sholat ke cache:", e);
                 }
+
             } else {
-                console.error("Struktur respons API tidak diharapkan atau data untuk hari yang salah:", dailyScheduleData);
-                Object.values(prayerTimeElements).forEach(el => el.textContent = 'Error');
-                // throw new Error(`Jadwal untuk tanggal ${day}-${month}-${year} tidak ditemukan atau format data API tidak sesuai.`);
+                throw new Error(`Jadwal untuk tanggal ${day}-${month}-${year} tidak ditemukan atau format data API tidak sesuai.`);
             }
 
         } catch (error) {
-            console.error("Gagal mengambil jadwal sholat:", error);
-            Object.values(prayerTimeElements).forEach(el => el.textContent = 'Error');
+            console.error("Gagal mengambil jadwal sholat dari API:", error);
+            console.log("Mencoba mengambil jadwal dari cache...");
+            try {
+                const cachedDataString = localStorage.getItem(cacheKey);
+                if (cachedDataString) {
+                    const cachedData = JSON.parse(cachedDataString);
+                    console.log("Berhasil mengambil dan menampilkan jadwal sholat dari cache.");
+                    displayPrayerTimes(cachedData);
+                } else {
+                    console.warn(`Tidak ada cache jadwal sholat untuk ${cacheKey}. Menampilkan error.`);
+                    displayPrayerTimes(null); // Tampilkan error
+                }
+            } catch (cacheError) {
+                console.error("Gagal mengambil atau mem-parsing data dari cache:", cacheError);
+                displayPrayerTimes(null); // Tampilkan error
+            }
         }
-        highlightNextPrayer(); // Panggil highlight setelah mencoba fetch
+        highlightNextPrayer(); // Panggil highlight setelah mencoba fetch atau mengambil dari cache
     }
 
     function highlightNextPrayer() {
