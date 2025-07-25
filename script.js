@@ -652,6 +652,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+ * Memperbarui label waktu Dzuhur.
+ * Mengubahnya menjadi "JUMAT" jika hari ini adalah hari Jumat.
+ */
+function updateDhuhrLabel() {
+    const dhuhrLabel = document.getElementById('dzuhur-label');
+    if (!dhuhrLabel) {
+        return; // Keluar jika elemen tidak ditemukan
+    }
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0:Minggu, 1:Senin, ..., 5:Jumat, 6:Sabtu
+
+    if (dayOfWeek === 5) {
+        // Jika hari ini Jumat
+        dhuhrLabel.textContent = 'JUMAT';
+    } else {
+        // Jika hari lain
+        dhuhrLabel.textContent = 'DZUHUR';
+    }
+}
+
     // --- LOGIKA PENGATURAN ---
     async function loadSettings() {
         try {
@@ -747,6 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateClock(); // Panggil sekali untuk tampilan awal
         fetchAndDisplayPrayerTimes(); // Ambil jadwal sholat awal
+        updateDhuhrLabel(); // Perbarui label Dzuhur jika hari ini Jumat
 
         if (settings.contentUrls && settings.contentUrls.length > 0) {
             cycleContent(); // Mulai siklus konten
