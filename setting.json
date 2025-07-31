@@ -95,13 +95,13 @@
         {
             "dayofWeek": 5,
             "audioFile": "audio/insyirah.mp3",
-            "timeOffsetMinutes": -60,
+            "timeOffsetMinutes": -78,
             "relativeToPrayer": "dzuhur"
         },
         {
             "dayofWeek": 4,
             "audioFile": "audio/insyirah.mp3",
-            "timeOffsetMinutes": -40,
+            "timeOffsetMinutes": -41,
             "relativeToPrayer": "maghrib"
         }
     ]
