@@ -53,6 +53,11 @@
         "(22/07/2025) RT 5 RW 5 : 3.980.000",
         "(24/07/2025) Pekerja : -13.000.000",
         "(24/07/2025) Material : -7.000.000",
+        "(25/07/2025) PemDes Banjarsari : 100.000.000",
+        "(28/07/2025) RT 1 RW 1 : 7.870.000",
+        "(28/07/2025) Material : -2.000.000",
+        "(31/07/2025) Pekerja : -15.000.000",
+        "(31/07/2025) Material : -5.000.000",
         ".:: Kas Takmir Masjid At-Taqwa Banjasari : ",
         "(01/07/2025) Bisyarah muadzin : -600.000",
         "(04/07/2025) Gebyar Muharrom : -4.200.000",
@@ -67,6 +72,8 @@
         "(12/07/2025) Tagihan Listrik : -486.850",
         "(18/07/2025) Infaq jumat : 1.618.000",
         "(23/07/2025) Hibah Sekda Demak : 35.000.000",
+        "(25/07/2025) Infaq Jumat : 1.581.000",
+        "(29/07/2025) Kotak Amal : 1.556.000",
         ".:: Informasi Keuangan Masjid At-Taqwa Banjasari :",
         "https://s.id/KasMasjidBanjarsari  ::."
     ],
@@ -83,7 +90,7 @@
         "grafik.html",
         "pengumuman.html",
         "khotib.html",
-        "takmir.html"        
+        "takmir.html"
     ],
     "audioSchedule": [
         {
