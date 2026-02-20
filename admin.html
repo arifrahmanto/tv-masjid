@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Masjid Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn {
+            @apply px-4 py-2 rounded-t bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer;
+        }
+        .tab-btn.active {
+            @apply bg-blue-500 text-white;
+        }
+        .loading-spinner {
+            @apply inline-block animate-spin h-5 w-5;
+        }
+        .error-message {
+            @apply text-red-600 text-sm mt-1;
+        }
+        .success-message {
+            @apply text-green-600 text-sm mt-1;
+        }
+        input.error, textarea.error, select.error {
+            @apply border-red-500 border-2;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700">
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">TV Masjid Admin Panel</h1>
+            <p class="text-gray-600 mb-6">Manage settings, marquee, and financial data</p>
+            <button id="github-login-btn" class="bg-gray-800 text-white px-6 py-3 rounded hover:bg-gray-900 font-bold">
+                🔐 Login with GitHub
+            </button>
+            <div id="login-error" class="error-message mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Main Admin Panel -->
+    <div id="admin-panel" style="display: none;" class="min-h-screen bg-gray-100">
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" style="display: none;" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+                <div class="inline-block animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                <p id="loading-message" class="text-gray-800 font-semibold">Loading...</p>
+            </div>
+        </div>
+        <!-- Header -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">TV Masjid Admin</h1>
+                    <p class="text-gray-600 text-sm">Logged in as: <span id="user-info">...</span></p>
+                </div>
+                <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto">
+                <button class="tab-btn active" data-tab="marquee">📰 Marquee</button>
+                <button class="tab-btn" data-tab="financial">💰 Financial</button>
+                <button class="tab-btn" data-tab="site">🏢 Site</button>
+                <button class="tab-btn" data-tab="prayer">🕌 Prayer</button>
+                <button class="tab-btn" data-tab="audio">🔊 Audio</button>
+                <button class="tab-btn" data-tab="advanced">⚙️ Advanced</button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <main class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Marquee Tab -->
+            <div id="marquee-tab" class="tab-content active bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Transaction Ledger</h2>
+                <div id="marquee-table-container">
+                    <!-- Will be populated by JS -->
+                </div>
+                <button id="add-marquee-btn" class="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    + Add New Entry
+                </button>
+            </div>
+
+            <!-- Financial Tab -->
+            <div id="financial-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Financial Summary</h2>
+                <div id="financial-forms-container">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Site Tab -->
+            <div id="site-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Site Configuration</h2>
+                <form id="site-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Page Title</label>
+                        <input type="text" name="pageTitle" class="w-full border border-gray-300 p-2 rounded" placeholder="Mosque name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Content URLs</label>
+                        <div id="content-urls-list" class="space-y-2 mb-3">
+                            <!-- URLs populated by JS -->
+                        </div>
+                        <button type="button" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" onclick="AdminPanel.addContentUrl()">+ Add URL</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Prayer Tab -->
+            <div id="prayer-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Prayer Settings</h2>
+                <form id="prayer-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Prayer City/Location</label>
+                        <input type="text" name="prayerApiCity" class="w-full border border-gray-300 p-2 rounded" placeholder="e.g., Demak">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Prayer Time Adjustments (Imsak,Subuh,Dzuhur,Ashar,Maghrib,Isya,Sunrise,Sunset,Midnight)</label>
+                        <input type="text" name="prayerApiTune" class="w-full border border-gray-300 p-2 rounded font-mono" placeholder="e.g., 2,2,3,4,3,3,3,3,3">
+                        <p class="text-xs text-gray-600 mt-1">Format: 9 comma-separated numbers (in minutes)</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Tarhim Offset (minutes)</label>
+                            <input type="number" name="tarhimOffsetMinutes" class="w-full border border-gray-300 p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Countdown Seconds</label>
+                            <input type="number" name="countdownSecondsThreshold" class="w-full border border-gray-300 p-2 rounded">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Tarhim Audio File</label>
+                            <input type="text" name="tarhimAudioFile" class="w-full border border-gray-300 p-2 rounded" placeholder="tarhim.mp3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Beep Audio File</label>
+                            <input type="text" name="beepAudioFile" class="w-full border border-gray-300 p-2 rounded" placeholder="beep.mp3">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Countdown HTML File</label>
+                        <input type="text" name="countdownHtmlFile" class="w-full border border-gray-300 p-2 rounded" placeholder="countdown.html">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Audio Tab -->
+            <div id="audio-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Audio & Schedules</h2>
+                <div id="audio-schedules-container">
+                    <!-- Populated by JS -->
+                </div>
+                <button type="button" class="mt-4 bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" onclick="AdminPanel.addAudioSchedule()">+ Add Schedule</button>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div id="advanced-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Advanced</h2>
+                <h3 class="text-lg font-semibold mb-3">Commit History</h3>
+                <div id="history-container">
+                    <!-- Will be populated by JS -->
+                </div>
+                <hr class="my-6">
+                <h3 class="text-lg font-semibold mb-3">Raw JSON</h3>
+                <pre id="raw-json" class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"></pre>
+                <button id="copy-json-btn" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer with Save Button -->
+        <footer class="bg-white border-t border-gray-200 sticky bottom-0 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div>
+                    <p id="validation-status" class="text-gray-600">Ready to save</p>
+                </div>
+                <div class="flex gap-3">
+                    <input type="text" id="commit-message" placeholder="Commit message (optional)" 
+                           class="px-4 py-2 border border-gray-300 rounded">
+                    <button id="save-btn" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 font-bold">
+                        💾 Save to GitHub
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

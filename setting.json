@@ -83,5 +83,28 @@
             "timeOffsetMinutes": -49,
             "relativeToPrayer": "maghrib"
         }
-    ]
+    ],
+    "financialSummary": {
+        "pembangunan": {
+            "month": "Desember 2025",
+            "previousBalance": 97771922,
+            "income": 123676000,
+            "expenses": 104262500,
+            "currentBalance": 117185422
+        },
+        "takmir": {
+            "month": "Desember 2025",
+            "previousBalance": 74050950,
+            "income": 7582000,
+            "expenses": 4818000,
+            "currentBalance": 76814950
+        },
+        "sawah": {
+            "month": "2025",
+            "previousBalance": 0,
+            "income": 29850000,
+            "expenses": 28454000,
+            "currentBalance": 1396000
+        }
+    }
 }

@@ -1,72 +1,23 @@
 <div class="w-full mb-3 text-black">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-20 text-lg">
+        <!-- Pembangunan Fund -->
         <div id="pnl-pembangunan" class="ml-10">
-            <p class="font-bold mb-3 mt-4">KAS PEMBANGUNAN DESEMBER 2025</p>
+            <p class="font-bold mb-3 mt-4"><span id="titlePembangunan">KAS PEMBANGUNAN</span></p>
             <table class="w-full">
                 <tr>
-                    <td style="width: 55%;">Saldo November 2025</td>
+                    <td style="width: 55%;">Saldo Bulan Sebelumnya</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;"> 97.771.922 </td>
+                    <td style="width: 35%; text-align: right;"><span id="pembangunanPrev">97.771.922</span></td>
                 </tr>
                 <tr class="mt-2">
                     <td style="width: 55%;">Pemasukan</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">123.676.000</td>
+                    <td style="width: 35%; text-align: right;"><span id="pembangunanIncome">123.676.000</span></td>
                 </tr>
                 <tr>
                     <td style="width: 55%;">Pengeluaran</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">104.262.500</td>
-                </tr>
-                <tr>
-                    <td colspan="3"><hr/></td>
-                </tr>
-                 <tr">
-                    <td style="width: 55%;">Saldo</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;"  class="text-xl font-bold">117.185.422</td>
-                </tr>
-            </table>
-            <br/>
-            <p class="font-bold mb-3">REKAP KAS PEMBANGUNAN (PEMBULATAN)</p>
-            <table class="w-full">
-                <tr class="mt-2">
-                    <td style="width: 55%;">Pemasukan</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">5.114.585.262</td>
-                </tr>
-                <tr>
-                    <td style="width: 55%;">Pengeluaran</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">4.997.399.840</td>
-                </tr>
-                <tr>
-                    <td colspan="3"><hr/></td>
-                </tr>
-                 <tr">
-                    <td style="width: 55%;">Saldo</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;" class="text-xl font-bold">117.185.422</td>
-                </tr>
-            </table>
-        </div>
-        <div id=""pnl-takmir class="mr-10">
-            <p class="font-bold mb-3 mt-4 text">KAS TAKMIR DESEMBER 2025</p>
-            <table class="w-full">
-                <tr>
-                    <td style="width: 55%;">Saldo November 2025</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">74.050.950</td>
-                </tr>
-                <tr>
-                    <td style="width: 55%;">Pemasukan</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">7.582.000</td>
-                </tr>
-                <tr>
-                    <td style="width: 55%;">Pengeluaran</td>
-                    <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">4.818.000</td>
+                    <td style="width: 35%; text-align: right;"><span id="pembangunanExpense">104.262.500</span></td>
                 </tr>
                 <tr>
                     <td colspan="3"><hr/></td>
@@ -74,31 +25,145 @@
                  <tr>
                     <td style="width: 55%;">Saldo</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;" class="text-xl font-bold">76.814.950</td>
+                    <td style="width: 35%; text-align: right;"  class="text-xl font-bold"><span id="pembangunanBalance">117.185.422</span></td>
                 </tr>
             </table>
             <br/>
-            <p class="font-bold mb-3">KAS SAWAH MASJID 2025</p>
+            <p class="font-bold mb-3">REKAP KAS PEMBANGUNAN (PEMBULATAN)</p>
             <table class="w-full">
                 <tr class="mt-2">
-                    <td style="width: 55%;">Pemasukan</td>
+                    <td style="width: 55%;">Total Pemasukan</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">29.850.000</td>
+                    <td style="width: 35%; text-align: right;"><span id="pembangunanTotalIncome">5.114.585.262</span></td>
                 </tr>
                 <tr>
-                    <td style="width: 55%;">Pengeluaran</td>
+                    <td style="width: 55%;">Total Pengeluaran</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;">28.454.000</td>
+                    <td style="width: 35%; text-align: right;"><span id="pembangunanTotalExpense">4.997.399.840</span></td>
                 </tr>
                 <tr>
                     <td colspan="3"><hr/></td>
                 </tr>
-                 <tr">
+                 <tr>
+                    <td style="width: 55%;">Saldo Akhir</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;" class="text-xl font-bold"><span id="pembangunanFinalBalance">117.185.422</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Takmir and Sawah Funds -->
+        <div id="pnl-takmir" class="mr-10">
+            <p class="font-bold mb-3 mt-4"><span id="titleTakmir">KAS TAKMIR DESEMBER 2025</span></p>
+            <table class="w-full">
+                <tr>
+                    <td style="width: 55%;">Saldo Bulan Sebelumnya</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;"><span id="takmirPrev">74.050.950</span></td>
+                </tr>
+                <tr>
+                    <td style="width: 55%;">Pemasukan</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;"><span id="takmirIncome">7.582.000</span></td>
+                </tr>
+                <tr>
+                    <td style="width: 55%;">Pengeluaran</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;"><span id="takmirExpense">4.818.000</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><hr/></td>
+                </tr>
+                 <tr>
                     <td style="width: 55%;">Saldo</td>
                     <td style="width: 10px;">:</td>
-                    <td style="width: 35%; text-align: right;" class="text-xl font-bold">1.396.000</td>
+                    <td style="width: 35%; text-align: right;" class="text-xl font-bold"><span id="takmirBalance">76.814.950</span></td>
+                </tr>
+            </table>
+            <br/>
+            <p class="font-bold mb-3"><span id="titleSawah">KAS SAWAH MASJID 2025</span></p>
+            <table class="w-full">
+                <tr class="mt-2">
+                    <td style="width: 55%;">Pemasukan</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;"><span id="sawahIncome">29.850.000</span></td>
+                </tr>
+                <tr>
+                    <td style="width: 55%;">Pengeluaran</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;"><span id="sawahExpense">28.454.000</span></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><hr/></td>
+                </tr>
+                 <tr>
+                    <td style="width: 55%;">Saldo</td>
+                    <td style="width: 10px;">:</td>
+                    <td style="width: 35%; text-align: right;" class="text-xl font-bold"><span id="sawahBalance">1.396.000</span></td>
                 </tr>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+// Format number with Indonesian thousands separator (dots)
+function formatNumber(num) {
+    if (typeof num !== 'number') num = parseInt(num) || 0;
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Load financial data from setting.json or use fallback values
+async function loadFinancialData() {
+    try {
+        const response = await fetch('../setting.json');
+        if (!response.ok) throw new Error('Failed to load setting.json');
+        const settings = await response.json();
+        
+        if (settings.financialSummary) {
+            populateFunds(settings.financialSummary);
+        }
+    } catch (error) {
+        console.log('Using fallback financial data (could not load setting.json):', error.message);
+        // Fallback values are already in HTML, no action needed
+    }
+}
+
+// Populate financial data from financialSummary object
+function populateFunds(financialSummary) {
+    // Pembangunan Fund
+    if (financialSummary.pembangunan) {
+        const pb = financialSummary.pembangunan;
+        document.getElementById('titlePembangunan').textContent = `KAS PEMBANGUNAN ${pb.month.toUpperCase()}`;
+        document.getElementById('pembangunanPrev').textContent = formatNumber(pb.previousBalance);
+        document.getElementById('pembangunanIncome').textContent = formatNumber(pb.income);
+        document.getElementById('pembangunanExpense').textContent = formatNumber(pb.expenses);
+        document.getElementById('pembangunanBalance').textContent = formatNumber(pb.currentBalance);
+        document.getElementById('pembangunanTotalIncome').textContent = formatNumber(pb.income);
+        document.getElementById('pembangunanTotalExpense').textContent = formatNumber(pb.expenses);
+        document.getElementById('pembangunanFinalBalance').textContent = formatNumber(pb.currentBalance);
+    }
+    
+    // Takmir Fund
+    if (financialSummary.takmir) {
+        const tk = financialSummary.takmir;
+        document.getElementById('titleTakmir').textContent = `KAS TAKMIR ${tk.month.toUpperCase()}`;
+        document.getElementById('takmirPrev').textContent = formatNumber(tk.previousBalance);
+        document.getElementById('takmirIncome').textContent = formatNumber(tk.income);
+        document.getElementById('takmirExpense').textContent = formatNumber(tk.expenses);
+        document.getElementById('takmirBalance').textContent = formatNumber(tk.currentBalance);
+    }
+    
+    // Sawah Fund
+    if (financialSummary.sawah) {
+        const sw = financialSummary.sawah;
+        document.getElementById('titleSawah').textContent = `KAS SAWAH MASJID ${sw.month}`;
+        document.getElementById('sawahIncome').textContent = formatNumber(sw.income);
+        document.getElementById('sawahExpense').textContent = formatNumber(sw.expenses);
+        document.getElementById('sawahBalance').textContent = formatNumber(sw.currentBalance);
+    }
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', loadFinancialData);
+</script>
