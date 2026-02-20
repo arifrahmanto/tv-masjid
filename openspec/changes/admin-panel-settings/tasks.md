@@ -86,7 +86,7 @@
 
 - [x] 10.1 Build Advanced tab with raw JSON viewer (read-only display of current setting.json)
 - [x] 10.2 Add "Copy to Clipboard" button for raw JSON
-- [ ] 10.3 (Optional) Add JSON editor for power users to edit raw JSON directly
+- [-] 10.3 (Optional) Add JSON editor for power users to edit raw JSON directly
 
 ## 11. Form Validation and Error Handling
 
