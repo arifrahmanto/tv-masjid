@@ -10,8 +10,9 @@
 
 ### Step 1: Open the Admin Panel
 - **URL:** Ask your IT contact for the exact URL (e.g., `https://domain/tv-masjid/admin.html`)
-- **Browser:** Use Chrome, Firefox, Safari, or Edge
+- **Browser:** Use Chrome, Firefox, or Edge (last 2 versions recommended for Excel import feature)
 - **Device:** Desktop computer or tablet (works best on larger screens)
+- **Internet:** Required for loading libraries (SheetJS for Excel import)
 
 ### Step 2: Log In
 - **Paste Token:** When asked for a "GitHub Token", paste the token provided by your IT contact
@@ -97,6 +98,68 @@ Date          Description                     Amount
 2. Click the **"Delete"** button on the right
 3. Confirm the deletion
 4. Click **"Save to GitHub"**
+
+**How to Import from Excel (Bulk Upload):**
+
+If you have many transactions in an Excel file (from treasurer reports), you can upload them all at once instead of entering one-by-one!
+
+1. **Prepare your Excel file** with these columns (in any order):
+   - **Date** (or Tanggal): Date in DD/MM/YYYY format
+   - **Description** (or Keterangan): Transaction description
+   - **Amount** (or Jumlah): Transaction amount
+
+2. Click **"📊 Import from Excel"** button
+
+3. **Select your file** (.xlsx or .xls format, max 5MB)
+
+4. **Review the preview modal:**
+   - See how many valid/invalid transactions were found
+   - View the first 10 transactions to verify
+   - Check any error messages for invalid rows
+   - Warning: This will REPLACE all existing transactions!
+   - A backup file will be downloaded automatically
+
+5. Click **"Replace All"** to import
+   - Backup downloads as `transactions-backup-YYYY-MM-DD.json`
+   - All existing transactions are cleared
+   - New transactions are imported
+   - Table refreshes automatically
+
+6. Click **"Save to GitHub"** to publish to TV
+
+**Accepted Excel Formats:**
+- **Date column:** Can use "Date", "Tanggal", or "Tgl" (case-insensitive)
+- **Date values:** Excel dates (e.g., 44927) or text dates (01/12/2025 or 1/12/2025)
+- **Description column:** Can use "Description", "Desc", "Keterangan", "Ket", or "Deskripsi"
+- **Amount column:** Can use "Amount", "Jumlah", "Value", "Nominal", or "Nilai"
+- **Amount values:** Plain numbers (500000), Indonesian format (500.000), or US format (500,000)
+- **Negative amounts:** Use minus sign for expenses (-500000)
+
+**Example Excel File:**
+
+| Date | Description | Amount |
+|------|-------------|--------|
+| 01/02/2026 | Sumbangan RT 5 | 500000 |
+| 02/02/2026 | Listrik Bulan Jan | -750000 |
+| 05/02/2026 | Infaq Jumat | 1200000 |
+
+**Troubleshooting:**
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "Missing required columns" | Excel doesn't have Date, Description, or Amount columns | Rename your columns to match accepted names |
+| "Invalid date format" | Date is not DD/MM/YYYY or Excel date | Fix dates in Excel: use format `01/12/2025` or Excel date cells |
+| "Amount must be a number" | Amount cell contains text | Remove any letters (Rp, IDR) from amount cells |
+| "File too large" | File exceeds 5MB | Split into multiple files or remove unnecessary columns |
+| "File format invalid" | Not an Excel file | Save as .xlsx or .xls format in Excel |
+
+**Important Notes:**
+- ⚠️ **Import REPLACES all transactions** - it doesn't add to existing ones
+- ✅ **Backup downloads automatically** - you can restore from backup if needed
+- ✅ Empty rows in Excel are ignored
+- ✅ Column order doesn't matter - system detects automatically
+- ✅ Can mix English and Indonesian column names
+- ⚠️ Invalid rows are shown in preview but NOT imported
 
 ---
 

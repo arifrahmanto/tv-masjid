@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TV Masjid Admin Panel</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -98,9 +99,15 @@
                 <div id="marquee-table-container">
                     <!-- Will be populated by JS -->
                 </div>
-                <button id="add-marquee-btn" class="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                    + Add New Entry
-                </button>
+                <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display: none;">
+                <div class="mt-4 flex gap-3">
+                    <button id="add-marquee-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        + Add New Entry
+                    </button>
+                    <button id="import-excel-btn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        📊 Import from Excel
+                    </button>
+                </div>
             </div>
 
             <!-- Financial Tab -->
@@ -209,6 +216,81 @@
                 </div>
             </div>
         </footer>
+    </div>
+
+    <!-- Import Preview Modal -->
+    <div id="import-preview-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div class="bg-blue-500 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-bold">Import Preview</h3>
+                <button id="close-preview-modal" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <!-- Loading Indicator -->
+                <div id="import-loading" class="hidden text-center py-8">
+                    <div class="loading-spinner border-4 border-blue-500 border-t-transparent rounded-full w-12 h-12 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Parsing Excel file...</p>
+                </div>
+                
+                <!-- Preview Content -->
+                <div id="import-preview-content" class="hidden">
+                    <div id="import-file-info" class="mb-4 text-sm text-gray-600">
+                        <!-- File name and row count -->
+                    </div>
+                    
+                    <div id="import-validation-summary" class="mb-6 p-4 rounded">
+                        <!-- Validation summary -->
+                    </div>
+                    
+                    <!-- Preview Table -->
+                    <div id="import-preview-table-container" class="mb-6">
+                        <h4 class="font-semibold text-gray-800 mb-2">Preview (First 10 Transactions)</h4>
+                        <div class="overflow-x-auto">
+                            <table id="import-preview-table" class="w-full border-collapse border border-gray-300 text-sm">
+                                <!-- Table content -->
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Error List -->
+                    <div id="import-error-list-container" class="hidden">
+                        <details class="mb-4">
+                            <summary class="cursor-pointer font-semibold text-red-600 hover:text-red-700">
+                                <span id="error-count">0</span> Invalid Rows (Click to expand)
+                            </summary>
+                            <div id="import-error-list" class="mt-2 max-h-48 overflow-y-auto bg-red-50 p-3 rounded">
+                                <!-- Error list -->
+                            </div>
+                        </details>
+                    </div>
+                    
+                    <!-- Replace Warning -->
+                    <div id="import-replace-warning" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                        <p class="text-yellow-800 font-semibold">
+                            ⚠️ This will REPLACE all <span id="current-transaction-count">0</span> existing transactions
+                        </p>
+                        <p class="text-yellow-700 text-sm mt-1">
+                            A backup will be automatically downloaded before replacing.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Error Display -->
+                <div id="import-error-display" class="hidden">
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                        <p class="text-red-800 font-semibold" id="import-error-message"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-100 px-6 py-4 flex justify-end gap-3">
+                <button id="cancel-import-btn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button id="confirm-import-btn" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-bold">
+                    Replace All
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="admin.js"></script>

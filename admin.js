@@ -475,7 +475,436 @@ const AdminPanel = (() => {
             });
         };
 
-        return { render, addNew };
+        // ========== Feature Detection ==========
+        const checkImportSupport = () => {
+            const hasFileReader = typeof FileReader !== 'undefined';
+            const hasXLSX = typeof XLSX !== 'undefined';
+            return hasFileReader && hasXLSX;
+        };
+
+        // ========== Import Functions ==========
+        let importData = { validRows: [], invalidRows: [], fileName: '' };
+
+        const triggerImport = () => {
+            if (!checkImportSupport()) {
+                alert('Import feature is not available. Please check your browser or internet connection.');
+                return;
+            }
+            const fileInput = document.getElementById('excel-file-input');
+            fileInput.click();
+        };
+
+        const handleFileSelect = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Reset file input
+            event.target.value = '';
+
+            // Validate file size (5MB max)
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showError('File too large (max 5MB)');
+                return;
+            }
+
+            // Validate file format
+            const validExtensions = ['.xlsx', '.xls'];
+            const fileName = file.name.toLowerCase();
+            const isValidFormat = validExtensions.some(ext => fileName.endsWith(ext));
+            if (!isValidFormat) {
+                showError('Invalid file format. Please upload .xlsx or .xls file');
+                return;
+            }
+
+            // Show modal with loading
+            showModal();
+            showLoading(true);
+            hideError();
+            hidePreviewContent();
+
+            // Read file
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    parseExcelFile(e.target.result, file.name);
+                } catch (error) {
+                    showError('Unable to read file. Please check the file is not corrupted');
+                    showLoading(false);
+                }
+            };
+            reader.onerror = () => {
+                showError('Error reading file. Please try again.');
+                showLoading(false);
+            };
+            reader.readAsBinaryString(file);
+        };
+
+        const parseExcelFile = (binaryString, fileName) => {
+            try {
+                // Parse workbook
+                const workbook = XLSX.read(binaryString, { type: 'binary' });
+                
+                // Get first sheet
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                
+                // Convert to JSON with headers
+                const rawData = XLSX.utils.sheet_to_json(sheet, { 
+                    header: 1,
+                    raw: false,
+                    defval: ''
+                });
+
+                if (rawData.length === 0) {
+                    showError('No data found in Excel file');
+                    showLoading(false);
+                    return;
+                }
+
+                // Detect columns from header row
+                const headers = rawData[0];
+                const columnMap = detectColumns(headers);
+                
+                if (!columnMap) {
+                    showError('Missing required columns: Date, Description, and Amount');
+                    showLoading(false);
+                    return;
+                }
+
+                // Validate rows
+                const validRows = [];
+                const invalidRows = [];
+
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    
+                    // Skip completely empty rows
+                    if (!row || row.every(cell => !cell || String(cell).trim() === '')) {
+                        continue;
+                    }
+
+                    const validation = validateRow(row, columnMap);
+                    
+                    if (validation.valid) {
+                        validRows.push({
+                            date: validation.date,
+                            description: validation.description,
+                            amount: validation.amount
+                        });
+                    } else {
+                        invalidRows.push({
+                            rowNum: i + 1,
+                            error: validation.error
+                        });
+                    }
+                }
+
+                if (validRows.length === 0) {
+                    showError('No valid transactions found. Please check file format.');
+                    showLoading(false);
+                    return;
+                }
+
+                // Store import data
+                importData = { validRows, invalidRows, fileName };
+
+                // Show preview
+                showLoading(false);
+                showPreview(validRows, invalidRows, fileName);
+
+            } catch (error) {
+                console.error('Parse error:', error);
+                showError('Unable to parse Excel file. Please check the file format.');
+                showLoading(false);
+            }
+        };
+
+        const detectColumns = (headers) => {
+            const dateAliases = ['date', 'tanggal', 'tgl'];
+            const descAliases = ['description', 'desc', 'keterangan', 'ket', 'deskripsi'];
+            const amountAliases = ['amount', 'jumlah', 'value', 'nominal', 'nilai'];
+
+            let dateCol = -1;
+            let descCol = -1;
+            let amountCol = -1;
+
+            headers.forEach((header, idx) => {
+                const h = String(header).toLowerCase().trim();
+                if (dateAliases.includes(h)) dateCol = idx;
+                if (descAliases.includes(h)) descCol = idx;
+                if (amountAliases.includes(h)) amountCol = idx;
+            });
+
+            if (dateCol === -1 || descCol === -1 || amountCol === -1) {
+                return null;
+            }
+
+            return { dateCol, descCol, amountCol };
+        };
+
+        const validateRow = (row, columnMap) => {
+            const { dateCol, descCol, amountCol } = columnMap;
+
+            // Extract values
+            let dateValue = row[dateCol];
+            let description = String(row[descCol] || '').trim();
+            let amountValue = row[amountCol];
+
+            // Validate description
+            if (!description) {
+                return { valid: false, error: 'Description cannot be empty' };
+            }
+
+            // Parse date
+            let dateStr = '';
+            if (typeof dateValue === 'number') {
+                // Excel serial date
+                const date = XLSX.SSF.parse_date_code(dateValue);
+                if (date) {
+                    const day = String(date.d).padStart(2, '0');
+                    const month = String(date.m).padStart(2, '0');
+                    const year = date.y;
+                    dateStr = `${day}/${month}/${year}`;
+                } else {
+                    return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
+                }
+            } else {
+                // Text date
+                dateStr = String(dateValue || '').trim();
+                
+                // Normalize date format (pad single digits)
+                const dateParts = dateStr.split('/');
+                if (dateParts.length === 3) {
+                    const day = dateParts[0].padStart(2, '0');
+                    const month = dateParts[1].padStart(2, '0');
+                    const year = dateParts[2];
+                    dateStr = `${day}/${month}/${year}`;
+                }
+            }
+
+            // Validate date format
+            const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+            if (!datePattern.test(dateStr)) {
+                return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
+            }
+
+            // Parse amount
+            let amountStr = String(amountValue || '').trim();
+            
+            // Remove thousand separators (both comma and dot)
+            amountStr = amountStr.replace(/[,.]/g, (match, offset, str) => {
+                // Keep decimal point if it's followed by 1-2 digits at the end
+                const remaining = str.substring(offset + 1);
+                if (match === '.' && /^\d{1,2}$/.test(remaining)) {
+                    return '.';
+                }
+                return '';
+            });
+
+            // Check if numeric
+            const amount = parseFloat(amountStr);
+            if (isNaN(amount)) {
+                return { valid: false, error: 'Amount must be a number' };
+            }
+
+            // Format amount with Indonesian thousand separators
+            const formattedAmount = formatAmount(amount);
+
+            return {
+                valid: true,
+                date: dateStr,
+                description: description,
+                amount: formattedAmount
+            };
+        };
+
+        const formatAmount = (value) => {
+            const num = parseFloat(value);
+            const isNegative = num < 0;
+            const absNum = Math.abs(num);
+            
+            // Split into integer and decimal parts
+            const parts = absNum.toString().split('.');
+            const intPart = parts[0];
+            const decPart = parts[1] ? ',' + parts[1] : '';
+            
+            // Add thousand separators (dots)
+            const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            
+            return (isNegative ? '-' : '') + formatted + decPart;
+        };
+
+        const showPreview = (validRows, invalidRows, fileName) => {
+            const currentCount = state.settings.marqueeText?.length || 0;
+            
+            // Show preview content
+            hideError();
+            showPreviewContent();
+
+            // File info
+            document.getElementById('import-file-info').innerHTML = `
+                <strong>File:</strong> ${fileName} &nbsp;|&nbsp; 
+                <strong>Total Rows:</strong> ${validRows.length + invalidRows.length}
+            `;
+
+            // Validation summary
+            const summaryEl = document.getElementById('import-validation-summary');
+            if (invalidRows.length === 0) {
+                summaryEl.className = 'mb-6 p-4 rounded bg-green-50 border-l-4 border-green-500';
+                summaryEl.innerHTML = `
+                    <p class="text-green-800 font-semibold">
+                        ✓ ${validRows.length} valid transactions
+                    </p>
+                `;
+            } else {
+                summaryEl.className = 'mb-6 p-4 rounded bg-yellow-50 border-l-4 border-yellow-500';
+                summaryEl.innerHTML = `
+                    <p class="text-yellow-800 font-semibold">
+                        ${validRows.length} valid, ${invalidRows.length} invalid
+                    </p>
+                `;
+            }
+
+            // Preview table
+            let tableHtml = `
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border border-gray-300 p-2">Date</th>
+                        <th class="border border-gray-300 p-2">Description</th>
+                        <th class="border border-gray-300 p-2">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            const previewRows = validRows.slice(0, 10);
+            previewRows.forEach(row => {
+                tableHtml += `
+                    <tr>
+                        <td class="border border-gray-300 p-2">${row.date}</td>
+                        <td class="border border-gray-300 p-2">${row.description}</td>
+                        <td class="border border-gray-300 p-2 text-right">${row.amount}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody>';
+            document.getElementById('import-preview-table').innerHTML = tableHtml;
+
+            // Error list
+            if (invalidRows.length > 0) {
+                const errorListContainer = document.getElementById('import-error-list-container');
+                errorListContainer.classList.remove('hidden');
+                document.getElementById('error-count').textContent = invalidRows.length;
+
+                let errorHtml = '<ul class="list-disc list-inside space-y-1">';
+                invalidRows.forEach(err => {
+                    errorHtml += `<li class="text-sm text-red-700">Row ${err.rowNum}: ${err.error}</li>`;
+                });
+                errorHtml += '</ul>';
+                document.getElementById('import-error-list').innerHTML = errorHtml;
+            } else {
+                document.getElementById('import-error-list-container').classList.add('hidden');
+            }
+
+            // Replace warning
+            document.getElementById('current-transaction-count').textContent = currentCount;
+
+            // Enable/disable confirm button
+            document.getElementById('confirm-import-btn').disabled = validRows.length === 0;
+        };
+
+        const downloadBackup = () => {
+            const currentData = state.settings.marqueeText || [];
+            const json = JSON.stringify(currentData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const filename = `transactions-backup-${dateStr}.json`;
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        const confirmReplace = () => {
+            const { validRows } = importData;
+            
+            if (validRows.length === 0) return;
+
+            // Download backup first
+            downloadBackup();
+
+            // Small delay to ensure download starts
+            setTimeout(() => {
+                // Transform to marqueeText format
+                const newTransactions = validRows.map(row => 
+                    `(${row.date}) ${row.description} : ${row.amount}`
+                );
+
+                // Replace all transactions
+                state.settings.marqueeText = newTransactions;
+
+                // Mark as changed
+                Settings.markChanged();
+
+                // Refresh display
+                render();
+
+                // Close modal
+                hideModal();
+
+                alert(`Successfully imported ${validRows.length} transactions!`);
+            }, 100);
+        };
+
+        // ========== Modal Helpers ==========
+        const showModal = () => {
+            document.getElementById('import-preview-modal').classList.remove('hidden');
+            document.getElementById('import-preview-modal').classList.add('flex');
+        };
+
+        const hideModal = () => {
+            document.getElementById('import-preview-modal').classList.add('hidden');
+            document.getElementById('import-preview-modal').classList.remove('flex');
+        };
+
+        const showLoading = (show) => {
+            const loadingEl = document.getElementById('import-loading');
+            if (show) {
+                loadingEl.classList.remove('hidden');
+            } else {
+                loadingEl.classList.add('hidden');
+            }
+        };
+
+        const showError = (message) => {
+            const errorDisplay = document.getElementById('import-error-display');
+            const errorMessage = document.getElementById('import-error-message');
+            errorDisplay.classList.remove('hidden');
+            errorMessage.textContent = message;
+        };
+
+        const hideError = () => {
+            document.getElementById('import-error-display').classList.add('hidden');
+        };
+
+        const showPreviewContent = () => {
+            document.getElementById('import-preview-content').classList.remove('hidden');
+        };
+
+        const hidePreviewContent = () => {
+            document.getElementById('import-preview-content').classList.add('hidden');
+        };
+
+        return { render, addNew, triggerImport, handleFileSelect, confirmReplace, hideModal, checkImportSupport };
     })();
 
     // ========== Financial Summary ==========
@@ -885,6 +1314,45 @@ const AdminPanel = (() => {
                 Settings.markChanged();
             });
 
+            // Import from Excel
+            document.getElementById('import-excel-btn').addEventListener('click', () => {
+                TransactionLedger.triggerImport();
+            });
+
+            // File input change
+            document.getElementById('excel-file-input').addEventListener('change', (e) => {
+                TransactionLedger.handleFileSelect(e);
+            });
+
+            // Import modal buttons
+            document.getElementById('close-preview-modal').addEventListener('click', () => {
+                TransactionLedger.hideModal();
+            });
+
+            document.getElementById('cancel-import-btn').addEventListener('click', () => {
+                TransactionLedger.hideModal();
+            });
+
+            document.getElementById('confirm-import-btn').addEventListener('click', () => {
+                TransactionLedger.confirmReplace();
+            });
+
+            // Modal escape key
+            document.getElementById('import-preview-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'import-preview-modal') {
+                    TransactionLedger.hideModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('import-preview-modal');
+                    if (!modal.classList.contains('hidden')) {
+                        TransactionLedger.hideModal();
+                    }
+                }
+            });
+
             // Copy JSON
             document.getElementById('copy-json-btn').addEventListener('click', () => {
                 const json = document.getElementById('raw-json').textContent;
@@ -975,6 +1443,14 @@ const AdminPanel = (() => {
                 AudioSchedules.render();
                 document.getElementById('raw-json').textContent = JSON.stringify(state.settings, null, 2);
                 await History.load();
+                
+                // Check import feature availability
+                const importBtn = document.getElementById('import-excel-btn');
+                if (!TransactionLedger.checkImportSupport || !TransactionLedger.checkImportSupport()) {
+                    importBtn.disabled = true;
+                    importBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    importBtn.title = 'Import feature unavailable. Check browser compatibility or internet connection.';
+                }
             }
         } else {
             UI.showLoginScreen();
