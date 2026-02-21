@@ -599,6 +599,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Fade in dengan menghapus class
         mainContentElement.classList.remove('fade-out');
+
+        // 5. Trigger page-specific data synchronization after content is loaded
+        // Execute any scripts in the loaded content
+        const scripts = mainContentElement.querySelectorAll('script');
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            newScript.textContent = oldScript.textContent;
+            newScript.src = oldScript.src;
+            mainContentElement.appendChild(newScript);
+        });
+
+        // Trigger specific page initialization if loaded content has data sync function
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure DOM is ready
+        if (typeof window.loadFinancialData === 'function') {
+            window.loadFinancialData(); // Sync financial data if keuangan.html is loaded
+        }
     }
 
     async function loadContentIntoMain(url) {
