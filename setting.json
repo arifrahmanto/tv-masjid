@@ -9,6 +9,7 @@
     "(30/01/2026) Bp. Sugiarno : 500.000",
     "(30/01/2026) RT 2 RW 1 : 16.150.000",
     "(30/01/2026) RT 1 RW 2 : 9.780.000",
+    "(30/01/2026) Infaq jumat : 1.856.000",
     "(29/01/2026) Material : -9.476.000",
     "(29/01/2026) Gaji Pekerja : -12.000.000",
     "(29/01/2026) Hamba Allah (QRIS) : 100.000",
@@ -26,12 +27,14 @@
     "(24/01/2026) alm Mbah Sarpan & Ibu Pingin : 1.500.000",
     "(24/01/2026) alm Bp Sarukan & Ibu Sri Harini : 2.000.000",
     "(24/01/2026) Keramik : -1.508.000",
+    "(24/01/2026) Tambahan Ampli : -3.030.000",
     "(23/01/2026) Hamba Allah : 1.000.000",
     "(23/01/2026) Lantai 2m (alm. Ibu Karti) : 1.000.000",
     "(23/01/2026) Lantai 1m (Ibu Kusni Kuswati) : 500.000",
     "(23/01/2026) Lantai 6m (alm Bp Sumadi & Ibu Suyati) : 3.000.000",
     "(23/01/2026) Lantai 2m (alm Sutaryono) : 1.000.000",
     "(23/01/2026) Jimpitan IRMAS : 3.070.000",
+    "(23/01/2026) Infaq jumat : 1.660.000",
     "(22/01/2026) RT 4 RW 5 : 11.020.000",
     "(22/01/2026) Jamaah Musholla Ky. Suhud : 1.000.000",
     "(22/01/2026) Material : -11.831.000",
@@ -41,9 +44,11 @@
     "(20/01/2026) Agita Kusuma (SekDes) : 13.000.000",
     "(20/01/2026) RT 3 RW 1 : 11.750.000",
     "(20/01/2026) Lantai 2m (H. Satiran) : 1.000.000",
+    "(20/01/2026) Perangkat dan instalasi Sound Sistem : -1.600.000",
     "(19/01/2026) Bp. Solekan (Babinsa) : 400.000",
     "(19/01/2026) Bp H.. Kaspio, Hj. Sugimah, Kak Suwandi : 1.600.000",
     "(19/01/2026) Keramik Luar : -8.072.000",
+    "(19/01/2026) Tagihan Listrik : -883.000",
     "(17/01/2026) Lantai 3m (Jamiyah Kaloran) : 1.500.000",
     "(17/01/2026) Suparman bin Karto dan Ibu Sutarmisih : 600.000",
     "(17/01/2026) Lantai 1m (alm Kusni binti Japar) : 500.000",
@@ -57,6 +62,7 @@
     "(16/01/2026) Lantai 8m (Klg Ibu Masiti) : 4.000.000",
     "(16/01/2026) Lantai 2m (Hamba Allah) : 1.000.000",
     "(16/01/2026) Hamba Allah : 500.000",
+    "(16/01/2026) Infaq jumat : 2.143.000",
     "(15/01/2026) Gaji Pekerja : -10.000.000",
     "(15/01/2026) Material : -9.143.000",
     "(15/01/2026) Lantai 2m (Bp. Sujud) : 1.000.000",
@@ -79,15 +85,21 @@
     "(10/01/2026) Hamba Allah (QRIS) : 200.000",
     "(10/01/2026) Lantai 2m (alm Mbah Parno & Siti Sukarsi) : 1.000.000",
     "(10/01/2026) Lantai 4m (Pekerja) : 2.000.000",
+    "(09/01/2026) Infaq jumat : 1.837.000",
     "(08/01/2026) Material : -8.200.000",
     "(08/01/2026) Gaji Pekerja : -10.800.000",
     "(05/01/2026) Lantai 10m (Sri Sumiyati) : 5.000.000",
     "(05/01/2026) Lantai 6m (alm Bp.Kasmul) : 3.000.000",
     "(05/01/2026) Lantai 2m (Jamiyyah Raudhatul Jannah) : 1.000.000",
+    "(05/01/2026) Pembelian Sound Sistem : -19.600.000",
+    "(05/01/2026) Perawatan dan Kebersihan : -450.000",
+    "(05/01/2026) Instalasi Sound Sistem : -500.000",
     "(04/01/2026) Lantai 8m (Jamiyah Manaqib Pondok Darunnajah) : 4.000.000",
+    "(02/01/2026) Infaq jumat : 1.635.000",
     "(01/01/2026) Gaji Pekerja : -9.700.000",
     "(01/01/2026) Material : -4.908.000",
-    "(01/01/2026) Lantai 12m (Klg. Kariri) : 6.000.000"
+    "(01/01/2026) Lantai 12m (Klg. Kariri) : 6.000.000",
+    "(01/01/2026) Bisyarah muadzin : -600.000"
   ],
   "prayerApiCity": "Demak",
   "prayerApiTune": "2,2,3,4,3,3,3,3,3",
@@ -125,25 +137,25 @@
   ],
   "financialSummary": {
     "pembangunan": {
-      "month": "",
-      "previousBalance": 0,
-      "income": 0,
-      "expenses": 0,
-      "currentBalance": 0
+      "month": "1/2026",
+      "previousBalance": 117185422,
+      "income": 243715727,
+      "expenses": 142607145,
+      "currentBalance": 218294004
     },
     "takmir": {
-      "month": "",
-      "previousBalance": 0,
-      "income": 0,
-      "expenses": 0,
-      "currentBalance": 0
+      "month": "1/2026",
+      "previousBalance": 76814950,
+      "income": 9131000,
+      "expenses": 26663000,
+      "currentBalance": 59282950
     },
     "sawah": {
-      "month": "",
-      "previousBalance": 0,
-      "income": 0,
-      "expenses": 0,
-      "currentBalance": 0
+      "month": "1/2026",
+      "previousBalance": 1396000,
+      "income": 28100000,
+      "expenses": 800000,
+      "currentBalance": 28696000
     }
   }
 }
