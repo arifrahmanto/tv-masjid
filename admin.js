@@ -554,13 +554,16 @@ const AdminPanel = (() => {
                 // Convert to JSON with headers
                 const rawData = XLSX.utils.sheet_to_json(sheet, { 
                     header: 1,
-                    raw: false,
+                    raw: true,
                     defval: ''
                 });
 
                 console.log('Raw data rows:', rawData.length);
                 if (rawData.length > 0) {
                     console.log('Header row:', rawData[0]);
+                    if (rawData.length > 1) {
+                        console.log('First data row:', rawData[1]);
+                    }
                 }
 
                 if (rawData.length === 0) {
@@ -607,7 +610,17 @@ const AdminPanel = (() => {
                         });
                         // Log first few failures for debugging
                         if (invalidRows.length <= 3) {
-                            console.warn(`Row ${i + 1} validation failed:`, row, validation.error);
+                            const dateValue = row[columnMap.dateCol];
+                            const amountValue = row[columnMap.amountCol];
+                            console.warn(`Row ${i + 1} validation failed:`, {
+                                rawRow: row,
+                                dateValue: dateValue,
+                                dateType: typeof dateValue,
+                                dateConstructor: dateValue?.constructor?.name,
+                                amountValue: amountValue,
+                                amountType: typeof amountValue,
+                                error: validation.error
+                            });
                         }
                     }
                 }
@@ -694,7 +707,7 @@ const AdminPanel = (() => {
         const validateRow = (row, columnMap) => {
             const { dateCol, descCol, amountCol } = columnMap;
 
-            // Extract values
+            // Extract and stringify values
             let dateValue = row[dateCol];
             let description = String(row[descCol] || '').trim();
             let amountValue = row[amountCol];
@@ -704,18 +717,30 @@ const AdminPanel = (() => {
                 return { valid: false, error: 'Description cannot be empty' };
             }
 
-            // Parse date
+            // Parse date - handle Date objects, numbers (Excel serial), and strings
             let dateStr = '';
-            if (typeof dateValue === 'number') {
-                // Excel serial date
+            
+            if (dateValue instanceof Date) {
+                // JavaScript Date object (XLSX parsed as date with raw: true)
+                try {
+                    const day = String(dateValue.getDate()).padStart(2, '0');
+                    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+                    const year = dateValue.getFullYear();
+                    dateStr = `${day}/${month}/${year}`;
+                } catch (e) {
+                    console.error('Date object conversion error:', e);
+                    return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
+                }
+            } else if (typeof dateValue === 'number') {
+                // Excel serial number
                 try {
                     dateStr = excelDateToString(dateValue);
                 } catch (e) {
-                    console.error('Date conversion error:', e, 'for value:', dateValue);
+                    console.error('Excel serial date conversion error:', e, 'for value:', dateValue);
                     return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
                 }
             } else {
-                // Text date
+                // Text date - stringify and normalize
                 dateStr = String(dateValue || '').trim();
                 
                 // Normalize date format (pad single digits)
@@ -734,7 +759,7 @@ const AdminPanel = (() => {
                 return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
             }
 
-            // Parse amount
+            // Parse amount - stringify first, then clean and parse
             let amountStr = String(amountValue || '').trim();
             
             // Remove thousand separators (both comma and dot)
