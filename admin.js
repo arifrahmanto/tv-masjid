@@ -684,22 +684,25 @@ const AdminPanel = (() => {
         // ========== Excel Date Conversion Helper ==========
         const excelDateToString = (excelDate) => {
             // Excel epoch is January 1, 1900
-            // Excel has a bug where it considers 1900 as a leap year
-            const excelEpoch = new Date(1900, 0, 1);
+            // Excel has a bug where it considers 1900 as a leap year (Feb 29, 1900 doesn't exist but Excel counts it)
+            // Numbers: 1-59 are normal, 60 is the fake Feb 29, 1900, 61+ need adjustment
             
-            // Adjust for Excel's leap year bug
-            let dateNum = excelDate;
-            if (dateNum > 59) {
-                dateNum -= 1;
+            // Use UTC to avoid timezone issues
+            const excelEpoch = new Date(Date.UTC(1900, 0, 1)); // January 1, 1900 UTC
+            
+            // Adjust for Excel's leap year bug (Feb 29, 1900)
+            let dayOffset = excelDate - 1; // Convert 1-based to 0-based
+            if (excelDate > 60) {
+                dayOffset -= 1; // Skip the non-existent Feb 29, 1900
             }
             
             // Create date by adding days to epoch
-            const resultDate = new Date(excelEpoch.getTime() + (dateNum - 1) * 24 * 60 * 60 * 1000);
+            const resultDate = new Date(excelEpoch.getTime() + dayOffset * 24 * 60 * 60 * 1000);
             
-            // Format as DD/MM/YYYY
-            const day = String(resultDate.getDate()).padStart(2, '0');
-            const month = String(resultDate.getMonth() + 1).padStart(2, '0');
-            const year = resultDate.getFullYear();
+            // Format as DD/MM/YYYY using UTC to avoid timezone issues
+            const day = String(resultDate.getUTCDate()).padStart(2, '0');
+            const month = String(resultDate.getUTCMonth() + 1).padStart(2, '0');
+            const year = resultDate.getUTCFullYear();
             
             return `${day}/${month}/${year}`;
         };
