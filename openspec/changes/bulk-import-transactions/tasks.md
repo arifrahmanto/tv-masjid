@@ -119,23 +119,23 @@
 - [x] 14.3 Test import with text dates in various formats
 - [x] 14.4 Test import with Indonesian column headers (Tanggal, Keterangan, Jumlah)
 - [x] 14.5 Test import with amounts in different formats (plain, dots, commas)
-- [ ] 14.6 Test import with negative amounts (expenses)
-- [ ] 14.7 Test import with some invalid rows mixed in
-- [ ] 14.8 Test import with all invalid rows
-- [ ] 14.9 Test import with empty rows
-- [ ] 14.10 Test import with file > 5MB (should reject)
-- [ ] 14.11 Test import with non-Excel file (should reject)
+- [x] 14.6 Test import with negative amounts (expenses)
+- [x] 14.7 Test import with some invalid rows mixed in
+- [x] 14.8 Test import with all invalid rows
+- [x] 14.9 Test import with empty rows
+- [x] 14.10 Test import with file > 5MB (should reject)
+- [x] 14.11 Test import with non-Excel file (should reject)
 
 ## 15. Edge Cases and Error Scenarios
 
-- [ ] 15.1 Test import with missing required columns
-- [ ] 15.2 Test import with extra columns (should ignore gracefully)
-- [ ] 15.3 Test import with only header row (no data)
-- [ ] 15.4 Test canceling file picker dialog
-- [ ] 15.5 Test canceling preview modal before confirm
-- [ ] 15.6 Test with corrupted Excel file
-- [ ] 15.7 Test when SheetJS CDN is unavailable (offline simulation)
-- [ ] 15.8 Test with very large valid file (1000+ rows) for performance
+- [x] 15.1 Test import with missing required columns
+- [x] 15.2 Test import with extra columns (should ignore gracefully)
+- [x] 15.3 Test import with only header row (no data)
+- [x] 15.4 Test canceling file picker dialog
+- [x] 15.5 Test canceling preview modal before confirm
+- [x] 15.6 Test with corrupted Excel file
+- [x] 15.7 Test when SheetJS CDN is unavailable (offline simulation)
+- [x] 15.8 Test with very large valid file (1000+ rows) for performance
 
 ## 16. Documentation
 
@@ -149,9 +149,9 @@
 
 ## 17. Browser Compatibility
 
-- [ ] 17.1 Test import feature in Chrome (last 2 versions)
-- [ ] 17.2 Test import feature in Firefox (last 2 versions)
-- [ ] 17.3 Test import feature in Edge (last 2 versions)
+- [x] 17.1 Test import feature in Chrome (last 2 versions)
+- [x] 17.2 Test import feature in Firefox (last 2 versions)
+- [x] 17.3 Test import feature in Edge (last 2 versions)
 - [x] 17.4 Document browser requirements in USER_MANUAL.md
 - [x] 17.5 Verify FileReader API feature detection works correctly
 
@@ -159,9 +159,9 @@
 
 - [x] 18.1 Verify backup download works before replace completes
 - [x] 18.2 Verify all validation errors display with correct row numbers
-- [ ] 18.3 Verify preview modal displays correctly on mobile/tablet
-- [ ] 18.4 Test complete workflow: upload → preview → backup → replace → save
-- [ ] 18.5 Verify Git commit message includes imported transaction count
+- [x] 18.3 Verify preview modal displays correctly on mobile/tablet
+- [x] 18.4 Test complete workflow: upload → preview → backup → replace → save
+- [x] 18.5 Verify Git commit message includes imported transaction count
 
 ## 19. Deployment
 
