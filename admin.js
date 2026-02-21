@@ -605,11 +605,17 @@ const AdminPanel = (() => {
                             rowNum: i + 1,
                             error: validation.error
                         });
+                        // Log first few failures for debugging
+                        if (invalidRows.length <= 3) {
+                            console.warn(`Row ${i + 1} validation failed:`, row, validation.error);
+                        }
                     }
                 }
 
+                console.log(`Validation complete: ${validRows.length} valid, ${invalidRows.length} invalid`);
+
                 if (validRows.length === 0) {
-                    showError('No valid transactions found. Please check file format.');
+                    showError(`No valid transactions found.\n\nFirst invalid row error: ${invalidRows.length > 0 ? invalidRows[0].error : 'Unknown'}\n\nPlease check file format.`);
                     showLoading(false);
                     return;
                 }
@@ -662,6 +668,29 @@ const AdminPanel = (() => {
             return { dateCol, descCol, amountCol };
         };
 
+        // ========== Excel Date Conversion Helper ==========
+        const excelDateToString = (excelDate) => {
+            // Excel epoch is January 1, 1900
+            // Excel has a bug where it considers 1900 as a leap year
+            const excelEpoch = new Date(1900, 0, 1);
+            
+            // Adjust for Excel's leap year bug
+            let dateNum = excelDate;
+            if (dateNum > 59) {
+                dateNum -= 1;
+            }
+            
+            // Create date by adding days to epoch
+            const resultDate = new Date(excelEpoch.getTime() + (dateNum - 1) * 24 * 60 * 60 * 1000);
+            
+            // Format as DD/MM/YYYY
+            const day = String(resultDate.getDate()).padStart(2, '0');
+            const month = String(resultDate.getMonth() + 1).padStart(2, '0');
+            const year = resultDate.getFullYear();
+            
+            return `${day}/${month}/${year}`;
+        };
+
         const validateRow = (row, columnMap) => {
             const { dateCol, descCol, amountCol } = columnMap;
 
@@ -679,13 +708,10 @@ const AdminPanel = (() => {
             let dateStr = '';
             if (typeof dateValue === 'number') {
                 // Excel serial date
-                const date = XLSX.SSF.parse_date_code(dateValue);
-                if (date) {
-                    const day = String(date.d).padStart(2, '0');
-                    const month = String(date.m).padStart(2, '0');
-                    const year = date.y;
-                    dateStr = `${day}/${month}/${year}`;
-                } else {
+                try {
+                    dateStr = excelDateToString(dateValue);
+                } catch (e) {
+                    console.error('Date conversion error:', e, 'for value:', dateValue);
                     return { valid: false, error: 'Invalid date format (use DD/MM/YYYY)' };
                 }
             } else {
