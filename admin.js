@@ -248,6 +248,12 @@ const AdminPanel = (() => {
                 
                 // Prepare updated settings
                 const updatedSettings = collectFormData();
+                const financialValidation = validateCanonicalFinancialSummary(updatedSettings.financialSummary);
+                if (!financialValidation.isValid) {
+                    UI.setLoading(false);
+                    UI.showError(financialValidation.errors.join('; '));
+                    return false;
+                }
                 const jsonString = JSON.stringify(updatedSettings, null, 2);
                 
                 UI.setLoading(true, 'Saving to GitHub...');
@@ -274,7 +280,7 @@ const AdminPanel = (() => {
                 return true;
             } catch (error) {
                 UI.setLoading(false);
-                UI.showError(`Save failed: ${error.message}`);
+                UI.showError(`Save failed: ${error.message}. Live page keeps showing last committed data until a save succeeds.`);
                 return false;
             }
         };
@@ -288,6 +294,92 @@ const AdminPanel = (() => {
     })();
 
     // ========== Form Data Collection ==========
+    const FINANCIAL_FUNDS = ['pembangunan', 'takmir', 'sawah'];
+    const FINANCIAL_KEYS = ['month', 'previousBalance', 'income', 'expenses', 'currentBalance'];
+
+    const parseFinancialNumber = (value, fallback = 0) => {
+        const normalized = String(value ?? '').trim().replace(/\./g, '').replace(',', '.');
+        if (normalized === '') {
+            return fallback;
+        }
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const buildCanonicalFinancialSummary = () => {
+        const financialSummary = {};
+
+        FINANCIAL_FUNDS.forEach(fund => {
+            const form = document.querySelector(`form[data-fund="${fund}"]`);
+            const existingFund = state.settings?.financialSummary?.[fund] || {};
+
+            const month = form?.querySelector('[name="month"]')?.value ?? existingFund.month ?? '';
+            const previousBalance = parseFinancialNumber(
+                form?.querySelector('[name="previousBalance"]')?.value,
+                parseFinancialNumber(existingFund.previousBalance, 0)
+            );
+            const income = parseFinancialNumber(
+                form?.querySelector('[name="income"]')?.value,
+                parseFinancialNumber(existingFund.income, 0)
+            );
+            const expenses = parseFinancialNumber(
+                form?.querySelector('[name="expenses"]')?.value,
+                parseFinancialNumber(existingFund.expenses, 0)
+            );
+            const currentBalance = previousBalance + income - expenses;
+
+            financialSummary[fund] = {
+                month,
+                previousBalance,
+                income,
+                expenses,
+                currentBalance
+            };
+
+            if (fund === 'pembangunan') {
+                financialSummary[fund].pembangunanTotalIncome = parseFinancialNumber(existingFund.pembangunanTotalIncome, income);
+                financialSummary[fund].pembangunanTotalExpense = parseFinancialNumber(existingFund.pembangunanTotalExpense, expenses);
+                financialSummary[fund].pembangunanFinalBalance = parseFinancialNumber(existingFund.pembangunanFinalBalance, currentBalance);
+            }
+        });
+
+        return financialSummary;
+    };
+
+    const validateCanonicalFinancialSummary = (financialSummary) => {
+        const errors = [];
+
+        FINANCIAL_FUNDS.forEach(fund => {
+            const fundData = financialSummary?.[fund];
+            if (!fundData || typeof fundData !== 'object') {
+                errors.push(`Financial fund '${fund}' is missing`);
+                return;
+            }
+
+            FINANCIAL_KEYS.forEach(key => {
+                if (!(key in fundData)) {
+                    errors.push(`Financial field '${fund}.${key}' is missing`);
+                }
+            });
+
+            ['previousBalance', 'income', 'expenses', 'currentBalance'].forEach(key => {
+                if (!Number.isFinite(fundData[key])) {
+                    errors.push(`Financial field '${fund}.${key}' must be a valid number`);
+                }
+            });
+
+            const expectedBalance = fundData.previousBalance + fundData.income - fundData.expenses;
+            if (fundData.currentBalance !== expectedBalance) {
+                errors.push(`Financial field '${fund}.currentBalance' must equal previousBalance + income - expenses`);
+            }
+        });
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    };
+
     const collectFormData = () => {
         // Collect marquee transactions
         const marqueeTransactions = [];
@@ -300,20 +392,7 @@ const AdminPanel = (() => {
             }
         });
 
-        // Collect financial data
-        const financialSummary = {};
-        ['pembangunan', 'takmir', 'sawah'].forEach(fund => {
-            const form = document.querySelector(`form[data-fund="${fund}"]`);
-            if (form) {
-                financialSummary[fund] = {
-                    month: form.querySelector('[name="month"]')?.value || '',
-                    previousBalance: parseInt(form.querySelector('[name="previousBalance"]')?.value || '0'),
-                    income: parseInt(form.querySelector('[name="income"]')?.value || '0'),
-                    expenses: parseInt(form.querySelector('[name="expenses"]')?.value || '0'),
-                    currentBalance: parseInt(form.querySelector('[name="currentBalance"]')?.value || '0')
-                };
-            }
-        });
+        const financialSummary = buildCanonicalFinancialSummary();
 
         // Collect site settings
         const pageTitle = document.querySelector('[name="pageTitle"]')?.value || state.settings.pageTitle;
@@ -1290,6 +1369,28 @@ const AdminPanel = (() => {
                     input.classList.remove('error');
                 }
             });
+
+            FINANCIAL_FUNDS.forEach(fund => {
+                ['previousBalance', 'income', 'expenses', 'currentBalance'].forEach(field => {
+                    const input = document.querySelector(`form[data-fund="${fund}"] [name="${field}"]`);
+                    if (!input) return;
+                    const numericValue = parseFinancialNumber(input.value, NaN);
+                    if (!Number.isFinite(numericValue)) {
+                        input.classList.add('error');
+                        errors.push(`Financial field '${fund}.${field}' must be a valid number`);
+                        isValid = false;
+                    } else {
+                        input.classList.remove('error');
+                    }
+                });
+            });
+
+            const financialSummary = buildCanonicalFinancialSummary();
+            const financialValidation = validateCanonicalFinancialSummary(financialSummary);
+            if (!financialValidation.isValid) {
+                errors.push(...financialValidation.errors);
+                isValid = false;
+            }
 
             if (!isValid) {
                 UI.showError(errors.join('; '));

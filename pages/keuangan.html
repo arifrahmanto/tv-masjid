@@ -29,7 +29,7 @@
                 </tr>
             </table>
             <br/>
-            <p class="font-bold mb-3">REKAP KAS PEMBANGUNAN (PEMBULATAN)</p>
+            <p class="font-bold mb-3">REKAP KAS PEMBANGUNAN</p>
             <table class="w-full">
                 <tr class="mt-2">
                     <td style="width: 55%;">Total Pemasukan</td>
@@ -45,7 +45,7 @@
                     <td colspan="3"><hr/></td>
                 </tr>
                  <tr>
-                    <td style="width: 55%;">Saldo Akhir</td>
+                    <td style="width: 55%;">Saldo</td>
                     <td style="width: 10px;">:</td>
                     <td style="width: 35%; text-align: right;" class="text-xl font-bold"><span id="pembangunanFinalBalance">117.185.422</span></td>
                 </tr>
@@ -109,58 +109,125 @@
 <script>
 // Format number with Indonesian thousands separator (dots)
 function formatNumber(num) {
-    if (typeof num !== 'number') num = parseInt(num) || 0;
+    if (typeof num !== 'number') {
+        num = Number(num);
+    }
+    if (!Number.isFinite(num)) {
+        num = 0;
+    }
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+const REQUIRED_FUNDS = ['pembangunan', 'takmir', 'sawah'];
+const REQUIRED_FUND_KEYS = ['month', 'previousBalance', 'income', 'expenses', 'currentBalance'];
+
+function isValidFinancialSummary(financialSummary) {
+    if (!financialSummary || typeof financialSummary !== 'object') {
+        return { valid: false, reason: 'financialSummary is missing' };
+    }
+
+    for (const fund of REQUIRED_FUNDS) {
+        const fundData = financialSummary[fund];
+        if (!fundData || typeof fundData !== 'object') {
+            return { valid: false, reason: `Fund '${fund}' is missing` };
+        }
+
+        for (const key of REQUIRED_FUND_KEYS) {
+            if (!(key in fundData)) {
+                return { valid: false, reason: `Field '${fund}.${key}' is missing` };
+            }
+        }
+
+        for (const numericKey of ['previousBalance', 'income', 'expenses', 'currentBalance']) {
+            const value = Number(fundData[numericKey]);
+            if (!Number.isFinite(value)) {
+                return { valid: false, reason: `Field '${fund}.${numericKey}' is not numeric` };
+            }
+        }
+    }
+
+    return { valid: true, reason: '' };
+}
+
+function createDisplayModel(financialSummary) {
+    const pembangunan = financialSummary.pembangunan;
+    const totalIncome = Number(pembangunan.pembangunanTotalIncome);
+    const totalExpense = Number(pembangunan.pembangunanTotalExpense);
+    const finalBalance = Number(pembangunan.pembangunanFinalBalance);
+
+    return {
+        pembangunan: {
+            title: `KAS PEMBANGUNAN ${String(pembangunan.month || '').toUpperCase()}`,
+            previousBalance: Number(pembangunan.previousBalance),
+            income: Number(pembangunan.income),
+            expenses: Number(pembangunan.expenses),
+            currentBalance: Number(pembangunan.currentBalance),
+            rekapIncome: Number.isFinite(totalIncome) ? totalIncome : Number(pembangunan.income),
+            rekapExpenses: Number.isFinite(totalExpense) ? totalExpense : Number(pembangunan.expenses),
+            rekapBalance: Number.isFinite(finalBalance) ? finalBalance : Number(pembangunan.currentBalance)
+        },
+        takmir: {
+            title: `KAS TAKMIR ${String(financialSummary.takmir.month || '').toUpperCase()}`,
+            previousBalance: Number(financialSummary.takmir.previousBalance),
+            income: Number(financialSummary.takmir.income),
+            expenses: Number(financialSummary.takmir.expenses),
+            currentBalance: Number(financialSummary.takmir.currentBalance)
+        },
+        sawah: {
+            title: `KAS SAWAH MASJID ${financialSummary.sawah.month}`,
+            income: Number(financialSummary.sawah.income),
+            expenses: Number(financialSummary.sawah.expenses),
+            currentBalance: Number(financialSummary.sawah.currentBalance)
+        }
+    };
+}
+
+function applyDisplayModel(model) {
+    const mapping = {
+        titlePembangunan: model.pembangunan.title,
+        pembangunanPrev: formatNumber(model.pembangunan.previousBalance),
+        pembangunanIncome: formatNumber(model.pembangunan.income),
+        pembangunanExpense: formatNumber(model.pembangunan.expenses),
+        pembangunanBalance: formatNumber(model.pembangunan.currentBalance),
+        pembangunanTotalIncome: formatNumber(model.pembangunan.rekapIncome),
+        pembangunanTotalExpense: formatNumber(model.pembangunan.rekapExpenses),
+        pembangunanFinalBalance: formatNumber(model.pembangunan.rekapBalance),
+        titleTakmir: model.takmir.title,
+        takmirPrev: formatNumber(model.takmir.previousBalance),
+        takmirIncome: formatNumber(model.takmir.income),
+        takmirExpense: formatNumber(model.takmir.expenses),
+        takmirBalance: formatNumber(model.takmir.currentBalance),
+        titleSawah: model.sawah.title,
+        sawahIncome: formatNumber(model.sawah.income),
+        sawahExpense: formatNumber(model.sawah.expenses),
+        sawahBalance: formatNumber(model.sawah.currentBalance)
+    };
+
+    Object.entries(mapping).forEach(([elementId, value]) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value;
+        }
+    });
 }
 
 // Load financial data from setting.json or use fallback values
 async function loadFinancialData() {
     try {
-        const response = await fetch('../setting.json');
+        const response = await fetch(`../setting.json?v=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) throw new Error('Failed to load setting.json');
         const settings = await response.json();
-        
-        if (settings.financialSummary) {
-            populateFunds(settings.financialSummary);
-        }
-    } catch (error) {
-        console.log('Using fallback financial data (could not load setting.json):', error.message);
-        // Fallback values are already in HTML, no action needed
-    }
-}
 
-// Populate financial data from financialSummary object
-function populateFunds(financialSummary) {
-    // Pembangunan Fund
-    if (financialSummary.pembangunan) {
-        const pb = financialSummary.pembangunan;
-        document.getElementById('titlePembangunan').textContent = `KAS PEMBANGUNAN ${pb.month.toUpperCase()}`;
-        document.getElementById('pembangunanPrev').textContent = formatNumber(pb.previousBalance);
-        document.getElementById('pembangunanIncome').textContent = formatNumber(pb.income);
-        document.getElementById('pembangunanExpense').textContent = formatNumber(pb.expenses);
-        document.getElementById('pembangunanBalance').textContent = formatNumber(pb.currentBalance);
-        document.getElementById('pembangunanTotalIncome').textContent = formatNumber(pb.income);
-        document.getElementById('pembangunanTotalExpense').textContent = formatNumber(pb.expenses);
-        document.getElementById('pembangunanFinalBalance').textContent = formatNumber(pb.currentBalance);
-    }
-    
-    // Takmir Fund
-    if (financialSummary.takmir) {
-        const tk = financialSummary.takmir;
-        document.getElementById('titleTakmir').textContent = `KAS TAKMIR ${tk.month.toUpperCase()}`;
-        document.getElementById('takmirPrev').textContent = formatNumber(tk.previousBalance);
-        document.getElementById('takmirIncome').textContent = formatNumber(tk.income);
-        document.getElementById('takmirExpense').textContent = formatNumber(tk.expenses);
-        document.getElementById('takmirBalance').textContent = formatNumber(tk.currentBalance);
-    }
-    
-    // Sawah Fund
-    if (financialSummary.sawah) {
-        const sw = financialSummary.sawah;
-        document.getElementById('titleSawah').textContent = `KAS SAWAH MASJID ${sw.month}`;
-        document.getElementById('sawahIncome').textContent = formatNumber(sw.income);
-        document.getElementById('sawahExpense').textContent = formatNumber(sw.expenses);
-        document.getElementById('sawahBalance').textContent = formatNumber(sw.currentBalance);
+        const validationResult = isValidFinancialSummary(settings.financialSummary);
+        if (!validationResult.valid) {
+            console.warn(`[keuangan] Using fallback values because payload is invalid: ${validationResult.reason}`);
+            return;
+        }
+
+        const model = createDisplayModel(settings.financialSummary);
+        applyDisplayModel(model);
+    } catch (error) {
+        console.warn(`[keuangan] Using fallback values because setting.json fetch failed: ${error.message}`);
     }
 }
 

@@ -137,21 +137,24 @@
   ],
   "financialSummary": {
     "pembangunan": {
-      "month": "1/2026",
+      "month": "Januari 2026",
       "previousBalance": 117185422,
       "income": 243715727,
       "expenses": 142607145,
-      "currentBalance": 218294004
+      "currentBalance": 218294004,
+      "pembangunanTotalIncome": 5114585262,
+      "pembangunanTotalExpense": 4997399840,
+      "pembangunanFinalBalance": 117185422
     },
     "takmir": {
-      "month": "1/2026",
+      "month": "Januari 2026",
       "previousBalance": 76814950,
       "income": 9131000,
       "expenses": 26663000,
       "currentBalance": 59282950
     },
     "sawah": {
-      "month": "1/2026",
+      "month": "Januari 2026",
       "previousBalance": 1396000,
       "income": 28100000,
       "expenses": 800000,

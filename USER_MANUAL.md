@@ -207,6 +207,22 @@ Current Balance =  117.185.422  ← Auto-calculated
 - ✅ Current Balance updates automatically when you change Income/Expenses
 - ⚠️ If balance looks wrong, check Previous Balance + Income - Expenses = Current Balance
 
+### Live Sync Guarantee (Keuangan Page)
+
+- Source of truth is `setting.json` → `financialSummary` (not manual HTML edits).
+- Keuangan page updates after **Save succeeds** in admin panel and TV reaches the next content load cycle.
+- If save fails, live TV keeps the **last committed** values.
+- If financial payload is invalid/incomplete, page keeps fallback values to avoid mixed or broken numbers.
+
+### Financial Sync Troubleshooting
+
+| Symptom | Likely Cause | What to Check |
+|---------|--------------|---------------|
+| Admin values differ from TV | Commit not successful or not propagated yet | Check success message + commit history hash in admin panel |
+| Some values updated but others not | Invalid/partial financial payload blocked by page validation | Open browser console on `keuangan.html` and check warning reason |
+| TV still old after save | Deployment/cache propagation delay | Wait 1-5 minutes, then refresh/restart TV content cycle |
+| Values keep reverting | Manual edits on other branch/repo or conflict overwrite | Compare latest `setting.json` in GitHub with admin commit history |
+
 ---
 
 ### 🏪 Tab 3: Site (Pages & Titles)

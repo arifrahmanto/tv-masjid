@@ -6,6 +6,29 @@
 
 ## Phase 15 - Testing & Validation Results
 
+### Sync Keuangan Live Data (2026-02-21)
+**Status:** ⚠️ **PARTIALLY VALIDATED (Code Complete, Live Propagation Test Pending)**
+
+**Implemented and Verified by Code Inspection:**
+- ✅ Canonical `financialSummary` validation in admin save flow (`month`, `previousBalance`, `income`, `expenses`, `currentBalance` for all funds)
+- ✅ Canonical payload generation with deterministic `currentBalance = previousBalance + income - expenses`
+- ✅ Atomic apply-or-fallback behavior in `keuangan.html` (no partial/mixed live updates)
+- ✅ Cache-busting + `no-store` fetch for `setting.json` on each load cycle
+- ✅ Explicit warning logs for invalid payload and fetch failures
+- ✅ Save failure message clarifies that live TV keeps last committed values
+
+**Manual Test Checklist Created:**
+- `KEUANGAN_SYNC_TEST_CHECKLIST.md`
+
+**Local Scenario Checks Executed (Node):**
+- ✅ Missing key case returns invalid (`takmir.expenses` missing)
+- ✅ Malformed numeric case returns invalid (`sawah.income` non-numeric)
+- ✅ Valid payload case returns valid
+- ✅ Fetch-failure fallback path confirmed in `loadFinancialData()` catch branch
+
+**Pending Live Environment Validation:**
+- ⏳ Real propagation timing measurements (commit-to-live visibility window)
+
 ### 15.1 GitHub OAuth Flow
 **Status:** ✅ **VALIDATED**
 
