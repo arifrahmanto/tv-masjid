@@ -114,11 +114,11 @@
 
 ## 14. Testing with Sample Data
 
-- [ ] 14.1 Create sample Excel file with 50 valid transactions for testing
-- [ ] 14.2 Test import with Excel serial number dates
-- [ ] 14.3 Test import with text dates in various formats
-- [ ] 14.4 Test import with Indonesian column headers (Tanggal, Keterangan, Jumlah)
-- [ ] 14.5 Test import with amounts in different formats (plain, dots, commas)
+- [x] 14.1 Create sample Excel file with 50 valid transactions for testing
+- [x] 14.2 Test import with Excel serial number dates
+- [x] 14.3 Test import with text dates in various formats
+- [x] 14.4 Test import with Indonesian column headers (Tanggal, Keterangan, Jumlah)
+- [x] 14.5 Test import with amounts in different formats (plain, dots, commas)
 - [ ] 14.6 Test import with negative amounts (expenses)
 - [ ] 14.7 Test import with some invalid rows mixed in
 - [ ] 14.8 Test import with all invalid rows
@@ -170,5 +170,5 @@
 - [x] 19.3 Commit USER_MANUAL.md updates
 - [x] 19.4 Commit example Excel template file
 - [x] 19.5 Push to GitHub and verify GitHub Pages deployment
-- [ ] 19.6 Test import feature on live GitHub Pages site
-- [ ] 19.7 Verify SheetJS CDN loads correctly in production
+- [x] 19.6 Test import feature on live GitHub Pages site
+- [x] 19.7 Verify SheetJS CDN loads correctly in production
