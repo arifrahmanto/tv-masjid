@@ -545,6 +545,8 @@ const AdminPanel = (() => {
                 // Parse workbook
                 const workbook = XLSX.read(binaryString, { type: 'binary' });
                 
+                console.log('Workbook parsed successfully. Sheets:', workbook.SheetNames);
+                
                 // Get first sheet
                 const sheetName = workbook.SheetNames[0];
                 const sheet = workbook.Sheets[sheetName];
@@ -555,6 +557,11 @@ const AdminPanel = (() => {
                     raw: false,
                     defval: ''
                 });
+
+                console.log('Raw data rows:', rawData.length);
+                if (rawData.length > 0) {
+                    console.log('Header row:', rawData[0]);
+                }
 
                 if (rawData.length === 0) {
                     showError('No data found in Excel file');
@@ -567,7 +574,8 @@ const AdminPanel = (() => {
                 const columnMap = detectColumns(headers);
                 
                 if (!columnMap) {
-                    showError('Missing required columns: Date, Description, and Amount');
+                    const foundHeaders = headers.map(h => String(h).toLowerCase().trim()).join(', ');
+                    showError(`Missing required columns.\n\nFound: ${foundHeaders}\n\nExpected: Date (Tanggal/Tgl), Description (Keterangan/Desc), Amount (Jumlah/Value)`);
                     showLoading(false);
                     return;
                 }
@@ -637,6 +645,17 @@ const AdminPanel = (() => {
             });
 
             if (dateCol === -1 || descCol === -1 || amountCol === -1) {
+                // Provide more detailed error message
+                const foundHeaders = headers.map(h => String(h).toLowerCase().trim()).join(', ');
+                const missing = [];
+                if (dateCol === -1) missing.push('Date (try: Date, Tanggal, Tgl)');
+                if (descCol === -1) missing.push('Description (try: Description, Desc, Keterangan, Ket, Deskripsi)');
+                if (amountCol === -1) missing.push('Amount (try: Amount, Jumlah, Value, Nominal, Nilai)');
+                const detailMsg = `\nFound headers: ${foundHeaders}\nMissing: ${missing.join(', ')}`;
+                
+                // Store for console debugging
+                console.warn('Column detection failed:', { headers, dateCol, descCol, amountCol, foundHeaders });
+                
                 return null;
             }
 

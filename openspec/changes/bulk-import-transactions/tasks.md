@@ -165,10 +165,10 @@
 
 ## 19. Deployment
 
-- [ ] 19.1 Commit admin.html changes (import button and modal)
-- [ ] 19.2 Commit admin.js changes (import functions in TransactionLedger)
-- [ ] 19.3 Commit USER_MANUAL.md updates
-- [ ] 19.4 Commit example Excel template file
-- [ ] 19.5 Push to GitHub and verify GitHub Pages deployment
+- [x] 19.1 Commit admin.html changes (import button and modal)
+- [x] 19.2 Commit admin.js changes (import functions in TransactionLedger)
+- [x] 19.3 Commit USER_MANUAL.md updates
+- [x] 19.4 Commit example Excel template file
+- [x] 19.5 Push to GitHub and verify GitHub Pages deployment
 - [ ] 19.6 Test import feature on live GitHub Pages site
 - [ ] 19.7 Verify SheetJS CDN loads correctly in production
