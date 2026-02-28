@@ -2,6 +2,49 @@
 // TV Masjid Admin Panel - Main Module
 // ============================================================================
 
+// ============================================================================
+// Picture Upload Utilities (inlined here since script.js is not loaded in admin)
+// ============================================================================
+const PictureUtils = (() => {
+    const STORAGE_KEY = 'tv_masjid_picture';
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    const ALLOWED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+
+    const validateImageFile = (file) => {
+        if (!file) return { valid: false, error: 'No file selected' };
+        if (file.size > MAX_FILE_SIZE) return { valid: false, error: `File size exceeds 2MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB)` };
+        if (!ALLOWED_FORMATS.includes(file.type)) return { valid: false, error: 'Invalid file format. Allowed: JPG, PNG, GIF, WebP' };
+        const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
+        if (!hasValidExtension) return { valid: false, error: `Invalid file extension. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` };
+        return { valid: true, error: null };
+    };
+
+    const convertToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+
+    const savePictureToStorage = (base64Data) => {
+        try { localStorage.setItem(STORAGE_KEY, base64Data); return { success: true, error: null }; }
+        catch (e) { return { success: false, error: `Storage error: ${e.message}` }; }
+    };
+
+    const getPictureFromStorage = () => {
+        try { return localStorage.getItem(STORAGE_KEY); }
+        catch (e) { return null; }
+    };
+
+    const deletePictureFromStorage = () => {
+        try { localStorage.removeItem(STORAGE_KEY); return { success: true, error: null }; }
+        catch (e) { return { success: false, error: `Error deleting picture: ${e.message}` }; }
+    };
+
+    return { validateImageFile, convertToBase64, savePictureToStorage, getPictureFromStorage, deletePictureFromStorage };
+})();
+
 const AdminPanel = (() => {
     // ========== Configuration ==========
     const GITHUB_CLIENT_ID = "YOUR_CLIENT_ID_HERE";  // Replace with your OAuth app Client ID
