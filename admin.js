@@ -1790,4 +1790,59 @@ const AdminPanel = (() => {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
     AdminPanel.init();
+    
+    // PWA Cache Management Handlers
+    const clearOfflineCacheBtn = document.getElementById('clear-offline-cache-btn');
+    const clearOfflineQueueBtn = document.getElementById('clear-offline-queue-btn');
+    const viewQueueStatusBtn = document.getElementById('view-queue-status-btn');
+    const queueStatusDiv = document.getElementById('queue-status');
+    
+    if (clearOfflineCacheBtn) {
+        clearOfflineCacheBtn.addEventListener('click', async () => {
+            if (confirm('Clear all offline cache? This will remove all cached pages and assets.')) {
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    alert('Offline cache cleared successfully!');
+                }
+            }
+        });
+    }
+    
+    if (clearOfflineQueueBtn) {
+        clearOfflineQueueBtn.addEventListener('click', () => {
+            if (confirm('Clear all offline changes in queue? These changes will be lost.')) {
+                if (typeof offlineQueue !== 'undefined') {
+                    offlineQueue.clearQueue();
+                    alert('Offline queue cleared successfully!');
+                    if (viewQueueStatusBtn) viewQueueStatusBtn.click();
+                } else {
+                    alert('Offline queue not available');
+                }
+            }
+        });
+    }
+    
+    if (viewQueueStatusBtn) {
+        viewQueueStatusBtn.addEventListener('click', () => {
+            if (typeof offlineQueue !== 'undefined') {
+                const queue = offlineQueue.getQueue();
+                if (queue.length === 0) {
+                    queueStatusDiv.innerHTML = '<p class="text-green-600">✓ No offline changes in queue</p>';
+                } else {
+                    let html = `<p class="text-yellow-600 mb-3">📋 ${queue.length} offline change${queue.length !== 1 ? 's' : ''} pending:</p>`;
+                    html += '<ul class="text-sm border-l-2 border-yellow-500 pl-3 space-y-2">';
+                    queue.forEach(req => {
+                        const time = new Date(req.timestamp).toLocaleTimeString();
+                        html += `<li><strong>${req.method}</strong> ${req.url}<br><small class="text-gray-500">${time}</small></li>`;
+                    });
+                    html += '</ul>';
+                    queueStatusDiv.innerHTML = html;
+                }
+            } else {
+                queueStatusDiv.innerHTML = '<p class="text-red-600">Error: Offline queue not available</p>';
+            }
+        });
+    }
 });
+
