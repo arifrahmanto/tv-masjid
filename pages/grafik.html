@@ -1,36 +1,3 @@
 <div class="w-full h-full flex justify-center items-center">
-    <div id="grafik-container" class="grafik-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-        <img id="grafik-image" src="grafik.png" alt="Grafik Masjid" class="grafik-image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-    </div>
+    <img src="grafik.png" alt="Grafik Masjid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
 </div>
-
-<script>
-// Grafik Picture Display Script
-(function() {
-    const STORAGE_KEY = 'tv_masjid_picture';
-
-    function loadPicture() {
-        try {
-            const pictureData = localStorage.getItem(STORAGE_KEY);
-            if (pictureData) {
-                document.getElementById('grafik-image').src = pictureData;
-            }
-            // If no stored picture, img already shows grafik.png by default
-        } catch (e) {
-            console.error('Error loading picture from storage:', e);
-        }
-    }
-
-    loadPicture();
-
-    // Listen for picture changes from other tabs
-    window.addEventListener('storage', function(event) {
-        if (event.key === STORAGE_KEY) {
-            document.getElementById('grafik-image').src = event.newValue || 'grafik.png';
-        }
-    });
-
-    // Expose for manual refresh by script.js
-    window.GrafikPicture = { refresh: loadPicture };
-})();
-</script>

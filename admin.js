@@ -3,10 +3,9 @@
 // ============================================================================
 
 // ============================================================================
-// Picture Upload Utilities (inlined here since script.js is not loaded in admin)
+// Picture Upload Utilities
 // ============================================================================
 const PictureUtils = (() => {
-    const STORAGE_KEY = 'tv_masjid_picture';
     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
     const ALLOWED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
@@ -27,22 +26,7 @@ const PictureUtils = (() => {
         reader.readAsDataURL(file);
     });
 
-    const savePictureToStorage = (base64Data) => {
-        try { localStorage.setItem(STORAGE_KEY, base64Data); return { success: true, error: null }; }
-        catch (e) { return { success: false, error: `Storage error: ${e.message}` }; }
-    };
-
-    const getPictureFromStorage = () => {
-        try { return localStorage.getItem(STORAGE_KEY); }
-        catch (e) { return null; }
-    };
-
-    const deletePictureFromStorage = () => {
-        try { localStorage.removeItem(STORAGE_KEY); return { success: true, error: null }; }
-        catch (e) { return { success: false, error: `Error deleting picture: ${e.message}` }; }
-    };
-
-    return { validateImageFile, convertToBase64, savePictureToStorage, getPictureFromStorage, deletePictureFromStorage };
+    return { validateImageFile, convertToBase64 };
 })();
 
 const AdminPanel = (() => {
@@ -1537,10 +1521,7 @@ const AdminPanel = (() => {
 
                 await GitHubAPI.put(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/grafik.png`, payload);
 
-                // Also save to localStorage for immediate local display
-                PictureUtils.savePictureToStorage(base64DataUri);
-
-                // Display preview
+                // Display preview using the uploaded image (immediate feedback)
                 displayPreview(base64DataUri);
 
                 showMessage(`✓ Picture uploaded and committed to GitHub (${(file.size / 1024).toFixed(2)}KB)`, false);
@@ -1552,17 +1533,9 @@ const AdminPanel = (() => {
             }
         };
 
-        const loadPicturePreview = () => {
-            const picture = PictureUtils.getPictureFromStorage();
-            if (picture) {
-                displayPreview(picture);
-            }
-        };
-
         return {
             uploadPicture,
-            onFileSelected,
-            loadPicturePreview
+            onFileSelected
         };
     })();
 
@@ -1763,7 +1736,6 @@ const AdminPanel = (() => {
                 SiteSettings.render();
                 PrayerSettings.render();
                 AudioSchedules.render();
-                PictureUploadHandler.loadPicturePreview();
                 document.getElementById('raw-json').textContent = JSON.stringify(state.settings, null, 2);
                 await History.load();
             }
@@ -1789,7 +1761,6 @@ const AdminPanel = (() => {
                 SiteSettings.render();
                 PrayerSettings.render();
                 AudioSchedules.render();
-                PictureUploadHandler.loadPicturePreview();
                 document.getElementById('raw-json').textContent = JSON.stringify(state.settings, null, 2);
                 await History.load();
                 
