@@ -1,33 +1,26 @@
 ## ADDED Requirements
 
-### Requirement: Display Uploaded Picture in Grafik
-The grafik.html page SHALL retrieve and display the most recently uploaded picture from the admin panel. The page MUST remove the static picture reference and use the dynamically uploaded picture instead.
+### Requirement: Display Grafik Picture
+The grafik.html page SHALL display `grafik.png` directly as a static image asset. The page MUST NOT rely on localStorage, JavaScript, or any dynamic retrieval mechanism to show the picture.
 
-#### Scenario: Grafik page displays uploaded picture
-- **WHEN** grafik.html loads after a picture has been uploaded
-- **THEN** the system SHALL retrieve the uploaded picture and display it on the grafik.html page
+#### Scenario: Grafik page loads after a new picture was uploaded
+- **WHEN** grafik.html loads after a picture has been committed to GitHub as `grafik.png`
+- **THEN** the browser SHALL load and display the updated `grafik.png` served from the repository
 
-#### Scenario: Grafik page loads without uploaded picture
-- **WHEN** grafik.html loads and no picture has been uploaded yet
-- **THEN** the system SHALL display the default grafik.png image
+#### Scenario: Grafik page loads with no custom upload
+- **WHEN** grafik.html loads and no picture has been uploaded via admin
+- **THEN** the page SHALL display the default `grafik.png` already present in the repository
 
-### Requirement: Picture Retrieval
-The system SHALL provide a mechanism for grafik.html to retrieve the currently stored picture. The retrieval MUST be reliable and work across page refreshes.
+### Requirement: No Client-Side Storage Dependency
+The grafik.html page SHALL NOT use localStorage, sessionStorage, IndexedDB, or any browser-side storage to load or cache the picture. The image MUST be loaded directly via its `src` attribute pointing to `grafik.png`.
 
-#### Scenario: Picture is retrieved on page load
-- **WHEN** grafik.html is loaded or refreshed
-- **THEN** the system SHALL retrieve the current picture from storage and make it available for display
-
-### Requirement: Picture Replacement
-When a new picture is uploaded via the admin panel, grafik.html SHALL automatically reflect the change without requiring a manual page refresh. The old picture MUST be replaced with the new one.
-
-#### Scenario: Picture is updated in real-time
-- **WHEN** a new picture is uploaded via the admin panel
-- **THEN** the system SHALL update the picture displayed in grafik.html (either immediately or on next page load)
+#### Scenario: Picture displays without any JavaScript execution
+- **WHEN** grafik.html is rendered
+- **THEN** the `<img src="grafik.png">` element SHALL display the image without requiring any script to run
 
 ### Requirement: Picture Display Styling
-The picture displayed in grafik.html SHALL be properly styled and sized to match the intended layout of the page. The image MUST maintain proper aspect ratio and fit appropriately within its container.
+The picture displayed in grafik.html SHALL be properly styled and sized to fit within the page layout with correct aspect ratio.
 
 #### Scenario: Picture displays with correct styling
-- **WHEN** the uploaded picture is displayed in grafik.html
-- **THEN** the system SHALL apply appropriate styling to ensure the picture is properly sized and positioned
+- **WHEN** the picture is displayed in grafik.html
+- **THEN** the image SHALL be sized with `max-width: 100%`, `max-height: 100%`, and `object-fit: contain` within its container
