@@ -87,6 +87,7 @@
                 <button class="tab-btn" data-tab="site">🏢 Site</button>
                 <button class="tab-btn" data-tab="prayer">🕌 Prayer</button>
                 <button class="tab-btn" data-tab="audio">🔊 Audio</button>
+                <button class="tab-btn" data-tab="grafik">🖼️ Grafik</button>
                 <button class="tab-btn" data-tab="advanced">⚙️ Advanced</button>
             </div>
         </div>
@@ -183,6 +184,37 @@
                     <!-- Populated by JS -->
                 </div>
                 <button type="button" class="mt-4 bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" onclick="AdminPanel.addAudioSchedule()">+ Add Schedule</button>
+            </div>
+
+            <!-- Grafik Tab -->
+            <div id="grafik-tab" class="tab-content bg-white p-6 rounded shadow mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Picture Upload (Grafik)</h2>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <p class="text-blue-800 text-sm">Allowed formats: JPG, PNG, GIF, WebP (Max 2MB)</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Select Picture File</label>
+                        <input type="file" id="picture-file-input" accept=".jpg,.jpeg,.png,.gif,.webp" class="w-full border border-gray-300 p-2 rounded">
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button id="upload-picture-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center gap-2">
+                            <span id="upload-btn-text">📤 Upload Picture</span>
+                            <span id="upload-spinner" class="loading-spinner hidden"></span>
+                        </button>
+                    </div>
+                    
+                    <div id="picture-message" class="hidden"></div>
+                    
+                    <div class="mt-6 pt-6 border-t">
+                        <h3 class="text-lg font-semibold mb-3">Current Picture Preview</h3>
+                        <div id="picture-preview-container" class="border border-gray-300 rounded p-4 bg-gray-50 text-center">
+                            <p class="text-gray-500">No picture uploaded yet</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Advanced Tab -->

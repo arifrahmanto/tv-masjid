@@ -1402,6 +1402,113 @@ const AdminPanel = (() => {
         return { validateAll };
     })();
 
+    // ========== Picture Upload Handler ==========
+    const PictureUploadHandler = (() => {
+        const showMessage = (text, isError = false) => {
+            const messageEl = document.getElementById('picture-message');
+            messageEl.textContent = text;
+            messageEl.className = isError ? 'error-message' : 'success-message';
+            messageEl.classList.remove('hidden');
+            setTimeout(() => {
+                messageEl.classList.add('hidden');
+            }, 5000);
+        };
+
+        const setLoading = (loading) => {
+            const btn = document.getElementById('upload-picture-btn');
+            const spinner = document.getElementById('upload-spinner');
+            const btnText = document.getElementById('upload-btn-text');
+            
+            if (loading) {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+                btnText.textContent = 'Uploading...';
+            } else {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                btnText.textContent = '📤 Upload Picture';
+            }
+        };
+
+        const displayPreview = (base64Data) => {
+            const container = document.getElementById('picture-preview-container');
+            container.innerHTML = `<img src="${base64Data}" style="max-height 300px; max-width: 100%; object-fit: contain;">`;
+        };
+
+        const onFileSelected = () => {
+            const fileInput = document.getElementById('picture-file-input');
+            if (!fileInput.files.length) return;
+
+            const file = fileInput.files[0];
+            const validation = PictureUtils.validateImageFile(file);
+            
+            if (!validation.valid) {
+                showMessage(validation.error, true);
+                fileInput.value = '';
+            }
+        };
+
+        const uploadPicture = async () => {
+            const fileInput = document.getElementById('picture-file-input');
+            
+            if (!fileInput.files.length) {
+                showMessage('Please select a file first', true);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const validation = PictureUtils.validateImageFile(file);
+            
+            if (!validation.valid) {
+                showMessage(validation.error, true);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                
+                // Convert to Base64
+                const base64Data = await PictureUtils.convertToBase64(file);
+                
+                // Save to storage
+                const saveResult = PictureUtils.savePictureToStorage(base64Data);
+                
+                if (!saveResult.success) {
+                    showMessage(saveResult.error, true);
+                    return;
+                }
+
+                // Display preview
+                displayPreview(base64Data);
+                
+                // Show success message
+                showMessage(`✓ Picture uploaded successfully (${(file.size / 1024).toFixed(2)}KB)`, false);
+                
+                // Clear file input
+                fileInput.value = '';
+                
+                Settings.markChanged();
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, true);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const loadPicturePreview = () => {
+            const picture = PictureUtils.getPictureFromStorage();
+            if (picture) {
+                displayPreview(picture);
+            }
+        };
+
+        return {
+            uploadPicture,
+            onFileSelected,
+            loadPicturePreview
+        };
+    })();
+
     // ========== UI Functions ==========
     const UI = (() => {
         const showLoginScreen = () => {
@@ -1527,6 +1634,15 @@ const AdminPanel = (() => {
                 }
             });
 
+            // Picture Upload
+            document.getElementById('upload-picture-btn').addEventListener('click', () => {
+                PictureUploadHandler.uploadPicture();
+            });
+
+            document.getElementById('picture-file-input').addEventListener('change', () => {
+                PictureUploadHandler.onFileSelected();
+            });
+
             // Copy JSON
             document.getElementById('copy-json-btn').addEventListener('click', () => {
                 const json = document.getElementById('raw-json').textContent;
@@ -1590,6 +1706,7 @@ const AdminPanel = (() => {
                 SiteSettings.render();
                 PrayerSettings.render();
                 AudioSchedules.render();
+                PictureUploadHandler.loadPicturePreview();
                 document.getElementById('raw-json').textContent = JSON.stringify(state.settings, null, 2);
                 await History.load();
             }
@@ -1615,6 +1732,7 @@ const AdminPanel = (() => {
                 SiteSettings.render();
                 PrayerSettings.render();
                 AudioSchedules.render();
+                PictureUploadHandler.loadPicturePreview();
                 document.getElementById('raw-json').textContent = JSON.stringify(state.settings, null, 2);
                 await History.load();
                 
