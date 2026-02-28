@@ -1,0 +1,27 @@
+{
+  "name": "TV Masjid",
+  "short_name": "TV Masjid",
+  "description": "Prayer times, announcements, and community information for the mosque",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "theme_color": "#1f2937",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icons/mosque.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["religion", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}

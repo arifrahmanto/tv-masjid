@@ -1,4 +1,259 @@
 // script.js
+
+// ============================================================================
+// Service Worker Registration (PWA)
+// ============================================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('Service Worker registered successfully:', registration);
+        
+        // Check for updates periodically (every 6 hours)
+        setInterval(() => {
+          registration.update();
+        }, 6 * 60 * 60 * 1000);
+        
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New service worker available
+              console.log('New version of app available!');
+              showUpdateNotification();
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}
+
+// Function to show update notification
+function showUpdateNotification() {
+  const banner = document.createElement('div');
+  banner.className = 'fixed bottom-4 left-4 right-4 bg-blue-500 text-white p-4 rounded-lg shadow-lg flex justify-between items-center z-50';
+  banner.innerHTML = `
+    <span>A new version of TV Masjid is available!</span>
+    <button onclick="window.location.reload()" class="ml-4 px-4 py-2 bg-white text-blue-500 rounded font-semibold hover:bg-gray-100">
+      Reload
+    </button>
+  `;
+  document.body.appendChild(banner);
+}
+
+// ============================================================================
+// Offline Support & Request Queue Management (PWA)
+// ============================================================================
+
+// Request queue for offline—stores failed API requests to replay when online
+class OfflineRequestQueue {
+  constructor() {
+    this.storageKey = 'pwa_request_queue';
+    this.loadQueue();
+  }
+
+  loadQueue() {
+    const stored = localStorage.getItem(this.storageKey);
+    this.queue = stored ? JSON.parse(stored) : [];
+  }
+
+  saveQueue() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.queue));
+  }
+
+  addRequest(method, url, data = null) {
+    const request = {
+      id: Date.now(),
+      method,
+      url,
+      data,
+      timestamp: new Date().toISOString(),
+      retries: 0
+    };
+    this.queue.push(request);
+    this.saveQueue();
+    console.log(`[Offline Queue] Added ${method} request to ${url}`, request);
+    return request.id;
+  }
+
+  getQueue() {
+    return this.queue;
+  }
+
+  removeRequest(id) {
+    this.queue = this.queue.filter(r => r.id !== id);
+    this.saveQueue();
+  }
+
+  clearQueue() {
+    this.queue = [];
+    localStorage.removeItem(this.storageKey);
+    console.log('[Offline Queue] Queue cleared');
+  }
+
+  size() {
+    return this.queue.length;
+  }
+}
+
+const offlineQueue = new OfflineRequestQueue();
+
+// Network status detection
+let isOnline = navigator.onLine;
+
+window.addEventListener('online', () => {
+  isOnline = true;
+  console.log('[Network Status] Online detected');
+  showNetworkStatus(true);
+  autoSyncOfflineRequests();
+});
+
+window.addEventListener('offline', () => {
+  isOnline = false;
+  console.log('[Network Status] Offline detected');
+  showNetworkStatus(false);
+});
+
+// Show offline/online status banner
+function showNetworkStatus(online) {
+  const existingBanner = document.getElementById('network-status-banner');
+  if (existingBanner) existingBanner.remove();
+
+  if (!online) {
+    const banner = document.createElement('div');
+    banner.id = 'network-status-banner';
+    banner.className = 'fixed top-0 left-0 right-0 bg-red-500 text-white p-3 text-center z-40';
+    banner.innerHTML = '📡 You are offline. Some features may be limited.';
+    document.body.appendChild(banner);
+  }
+}
+
+// Auto-sync offline requests when connection restored
+async function autoSyncOfflineRequests() {
+  const queue = offlineQueue.getQueue();
+  if (queue.length === 0) return;
+
+  console.log(`[Auto-Sync] Syncing ${queue.length} queued requests...`);
+  showSyncingStatus(true, queue.length);
+
+  for (const request of queue) {
+    try {
+      const options = {
+        method: request.method,
+        headers: { 'Content-Type': 'application/json' }
+      };
+
+      if (request.data) {
+        options.body = JSON.stringify(request.data);
+      }
+
+      const response = await fetch(request.url, options);
+      if (response.ok) {
+        offlineQueue.removeRequest(request.id);
+        console.log(`[Auto-Sync] ✓ Synced ${request.method} ${request.url}`);
+      } else {
+        console.warn(`[Auto-Sync] Failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.warn(`[Auto-Sync] Error syncing request:`, error);
+    }
+  }
+
+  showSyncingStatus(false);
+  const remaining = offlineQueue.getQueue().length;
+  if (remaining === 0) {
+    console.log('[Auto-Sync] All queued requests synced successfully!');
+  }
+}
+
+// Show syncing status indicator
+function showSyncingStatus(isSyncing, count = 0) {
+  const existingIndicator = document.getElementById('sync-status-indicator');
+  if (existingIndicator) existingIndicator.remove();
+
+  if (isSyncing) {
+    const indicator = document.createElement('div');
+    indicator.id = 'sync-status-indicator';
+    indicator.className = 'fixed top-12 left-0 right-0 bg-yellow-500 text-white p-3 text-center z-40';
+    indicator.innerHTML = `🔄 Syncing ${count} offline change${count !== 1 ? 's' : ''}...`;
+    document.body.appendChild(indicator);
+  }
+}
+
+// Wrap fetch for offline request queue
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  return originalFetch.apply(this, args)
+    .then(response => {
+      // Track successful responses as "last updated"
+      const request = args[0];
+      const url = typeof request === 'string' ? request : request.url;
+      updateLastModified(url);
+      return response;
+    })
+    .catch(error => {
+      const request = args[0];
+      const options = args[1] || {};
+      
+      // Queue POST/PUT/DELETE requests that fail
+      if (!isOnline && ['POST', 'PUT', 'DELETE'].includes(options.method?.toUpperCase())) {
+        const url = typeof request === 'string' ? request : request.url;
+        const data = options.body ? JSON.parse(options.body) : null;
+        offlineQueue.addRequest(options.method.toUpperCase(), url, data);
+        console.log(`[Offline Queue] Queued failed ${options.method} request`);
+      }
+      
+      throw error;
+    });
+};
+
+// Last Updated Timestamp Management
+const LAST_MODIFIED_STORAGE = 'pwa_last_modified_timestamps';
+
+function updateLastModified(url) {
+  const timestamps = JSON.parse(localStorage.getItem(LAST_MODIFIED_STORAGE) || '{}');
+  timestamps[url] = new Date().toISOString();
+  localStorage.setItem(LAST_MODIFIED_STORAGE, JSON.stringify(timestamps));
+}
+
+function getLastModified(url) {
+  const timestamps = JSON.parse(localStorage.getItem(LAST_MODIFIED_STORAGE) || '{}');
+  const timestamp = timestamps[url];
+  if (!timestamp) return null;
+  
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
+
+function displayLastUpdated(elementId, url) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  const timestamp = getLastModified(url);
+  if (timestamp && !isOnline) {
+    const small = document.createElement('small');
+    small.className = 'text-gray-500 block mt-1';
+    small.textContent = `Last updated: ${timestamp}`;
+    element.appendChild(small);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- KONFIGURASI & KONSTANTA ---
     const PRAYER_ORDER = ['imsak', 'subuh', 'dzuhur', 'ashar', 'maghrib', 'isya'];

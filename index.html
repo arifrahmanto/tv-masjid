@@ -5,6 +5,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="title">Jam Shalat Masjid At-Taqwa Banjarsari</title>
+    
+    <!-- PWA Metadata -->
+    <meta name="application-name" content="TV Masjid">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TV Masjid">
+    <meta name="theme-color" content="#1f2937">
+    <meta name="description" content="Prayer times, announcements, and community information for the mosque">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/icons/mosque.png">
+    
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="TV Masjid - Prayer Times & Community">
+    <meta property="og:description" content="Real-time prayer times, announcements, and community information for the mosque">
+    <meta property="og:image" content="/icons/mosque.png">
+    <meta property="og:url" content="https://tvmasjid.banjarsari-gajah.web.id/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="TV Masjid - Prayer Times & Community">
+    <meta name="twitter:description" content="Real-time prayer times and mosque announcements">
+    <meta name="twitter:image" content="/icons/mosque.png">
+    
+    <!-- DNS Prefetch for External Domains -->
+    <link rel="dns-prefetch" href="https://api.github.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Content Security Policy (basic meta tag - configure full headers on server) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.github.com; img-src 'self' data: https:; media-src 'self' data: https:;">
+    
+    <!-- Resource Preloading Hints for Performance -->
+    <link rel="preload" href="/style.css" as="style">
+    <link rel="preload" href="/script.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@700&display=swap" as="style">
+    <link rel="prefetch" href="/pages/grafik.html">
+    <link rel="prefetch" href="/pages/khotib.html">
+    
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- 1. Tambahkan link untuk Google Fonts (Poppins untuk teks umum, Roboto Mono untuk waktu) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
