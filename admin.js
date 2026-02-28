@@ -1509,28 +1509,42 @@ const AdminPanel = (() => {
 
             try {
                 setLoading(true);
-                
-                // Convert to Base64
-                const base64Data = await PictureUtils.convertToBase64(file);
-                
-                // Save to storage
-                const saveResult = PictureUtils.savePictureToStorage(base64Data);
-                
-                if (!saveResult.success) {
-                    showMessage(saveResult.error, true);
-                    return;
+                showMessage('Converting file...', false);
+
+                // Convert to Base64 data URI
+                const base64DataUri = await PictureUtils.convertToBase64(file);
+
+                // Strip the data URI prefix to get raw base64 for GitHub API
+                const rawBase64 = base64DataUri.split(',')[1];
+
+                // Get current SHA of grafik.png from GitHub (needed to update existing file)
+                showMessage('Checking existing file on GitHub...', false);
+                let existingSha = null;
+                try {
+                    const existing = await GitHubAPI.get(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/grafik.png`);
+                    existingSha = existing.sha;
+                } catch (e) {
+                    // File doesn't exist yet — that's fine, we'll create it
                 }
 
+                // Commit grafik.png to GitHub
+                showMessage('Committing to GitHub...', false);
+                const payload = {
+                    message: `Update grafik picture from admin panel`,
+                    content: rawBase64
+                };
+                if (existingSha) payload.sha = existingSha;
+
+                await GitHubAPI.put(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/grafik.png`, payload);
+
+                // Also save to localStorage for immediate local display
+                PictureUtils.savePictureToStorage(base64DataUri);
+
                 // Display preview
-                displayPreview(base64Data);
-                
-                // Show success message
-                showMessage(`✓ Picture uploaded successfully (${(file.size / 1024).toFixed(2)}KB)`, false);
-                
-                // Clear file input
+                displayPreview(base64DataUri);
+
+                showMessage(`✓ Picture uploaded and committed to GitHub (${(file.size / 1024).toFixed(2)}KB)`, false);
                 fileInput.value = '';
-                
-                Settings.markChanged();
             } catch (error) {
                 showMessage(`Error: ${error.message}`, true);
             } finally {
